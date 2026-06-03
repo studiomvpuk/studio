@@ -109,6 +109,18 @@
 .admin-app .msg-mine .msg-meta { color: rgba(255, 255, 255, 0.6); }
 .admin-app .msg-body { font-size: 0.9rem; line-height: 1.45; }
 
+/* messages inbox */
+.admin-app .thread-list { display: flex; flex-direction: column; }
+.admin-app .thread-row { display: flex; align-items: center; gap: 16px; padding: 16px 8px; border-bottom: 1px solid var(--hair); text-decoration: none; color: inherit; transition: 0.15s; border-radius: 8px; }
+.admin-app .thread-row:last-child { border-bottom: none; }
+.admin-app .thread-row:hover { background: var(--paper); }
+.admin-app .thread-main { flex: 1; min-width: 0; }
+.admin-app .thread-top { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.admin-app .thread-nm { font-weight: 500; font-size: 0.96rem; }
+.admin-app .thread-last { font-size: 0.86rem; color: var(--grey); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-app .thread-last b { color: var(--ink); font-weight: 600; }
+.admin-app .thread-when { font-size: 0.76rem; color: var(--grey-2); flex: none; white-space: nowrap; }
+
 /* automation rules */
 .admin-app .rule-list { display: flex; flex-direction: column; }
 .admin-app .rule { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--hair); flex-wrap: wrap; }

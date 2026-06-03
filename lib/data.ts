@@ -341,3 +341,62 @@ export async function getClientData(clientId?: string): Promise<ClientData> {
   };
 }
 
+/* ───────── ADMIN MESSAGES (inbox) ───────── */
+const whenFull = (iso: string | null) =>
+  iso ? new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—";
+
+export type AdminThread = {
+  projectId: string; project: string; client: string;
+  last: string; lastAuthor: string; when: string; count: number; awaitingReply: boolean;
+};
+
+export async function getAdminThreads(): Promise<{ live: boolean; threads: AdminThread[]; awaiting: number }> {
+  const rows = await safeQuery<{
+    project_id: string; name: string; client_name: string | null;
+    last_body: string; last_author: string; last_at: string; cnt: string;
+    last_client_at: string | null; last_team_at: string | null;
+  }>(`
+    select p.id as project_id, p.name,
+           (select name from users u where u.id = p.client_id) as client_name,
+           m.body as last_body, m.author as last_author, m.created_at as last_at,
+           (select count(*) from messages mm where mm.project_id = p.id) as cnt,
+           (select max(created_at) from messages mm where mm.project_id = p.id and mm.author = 'client') as last_client_at,
+           (select max(created_at) from messages mm where mm.project_id = p.id and mm.author = 'team') as last_team_at
+      from projects p
+      join lateral (
+        select body, author, created_at from messages where project_id = p.id order by created_at desc limit 1
+      ) m on true
+     order by m.created_at desc
+  `);
+
+  const threads: AdminThread[] = rows.map((r) => ({
+    projectId: r.project_id,
+    project: r.name,
+    client: r.client_name || "—",
+    last: r.last_body,
+    lastAuthor: r.last_author,
+    when: whenFull(r.last_at),
+    count: Number(r.cnt),
+    awaitingReply: r.last_client_at != null && (r.last_team_at == null || new Date(r.last_client_at) > new Date(r.last_team_at)),
+  }));
+
+  return { live: dbConfigured, threads, awaiting: threads.filter((t) => t.awaitingReply).length };
+}
+
+export async function getAdminThread(projectId: string): Promise<{ project: string; client: string; messages: ClientMessage[] } | null> {
+  const proj = await safeQuery<{ name: string; client_name: string | null }>(
+    `select p.name, (select name from users u where u.id = p.client_id) as client_name from projects p where p.id = $1`,
+    [projectId]
+  );
+  if (!proj.length) return null;
+  const rows = await safeQuery<{ author: string; body: string; created_at: string }>(
+    `select author, body, created_at from messages where project_id = $1 order by created_at asc limit 100`,
+    [projectId]
+  );
+  return {
+    project: proj[0].name,
+    client: proj[0].client_name || "—",
+    messages: rows.map((m) => ({ author: m.author, body: m.body, when: dayMonth(m.created_at) })),
+  };
+}
+
