@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { dbConfigured, query } from "@/lib/db";
+import { ensureSchema } from "@/lib/migrate";
 import { dispatch } from "@/lib/automations";
 
 export async function POST(req: Request) {
@@ -20,6 +21,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, demo: true });
   }
 
+  await ensureSchema();
   await query(
     `insert into leads (name, email, brief, source, status) values ($1, $2, $3, 'website', 'new')`,
     [name || null, email, brief]
