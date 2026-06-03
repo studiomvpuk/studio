@@ -4,38 +4,21 @@ import { useState } from "react";
 import Link from "next/link";
 import { projects } from "../(site)/projects";
 
-// Selected-work showcase. Every image is a real screenshot from public/work/<slug>:
-// the project's own shot fills the background (dimmed) AND the crisp foreground card.
-// Projects without a screenshot yet are skipped here (still on the full /work list).
+// Selected-work showcase. Each project shows ONE real screenshot from
+// public/work/<slug>, framed in a clean browser mockup — full image, no zoom,
+// no overlaid layers. Projects without a screenshot yet are skipped here.
 const shown = projects.filter((p) => p.shots.length > 0);
 
 export default function Showcase() {
   const [active, setActive] = useState(0);
-  const [prev, setPrev] = useState(0);
-
-  const select = (i: number) => {
-    if (i === active) return;
-    setPrev(active);
-    setActive(i);
-  };
+  const select = (i: number) => setActive(i);
 
   const p = shown[active];
-  const back = p.shots.length > 1 ? p.shots[0] : null;
-  const front = p.shots[p.shots.length - 1];
-  const prevFront = shown[prev].shots[shown[prev].shots.length - 1];
+  const shot = p.shots[p.shots.length - 1];
 
   return (
     <div className="ss-stage">
-      {/* background = the active project's own screenshot, dimmed + blurred for
-          legibility. Cross-fades: previous layer underneath, new layer fades in. */}
-      <div className="ss-bg under" aria-hidden>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={prevFront} alt="" />
-      </div>
-      <div className="ss-bg over" key={`bg-${active}`} aria-hidden>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={front} alt="" />
-      </div>
+      <div className="ss-glow" aria-hidden />
 
       {/* project list — pinned to the far-left viewport edge.
           Hover previews the project; clicking opens its case study. */}
@@ -57,18 +40,16 @@ export default function Showcase() {
       {/* description — slides down from the top */}
       <p className="ss-desc" key={`desc-${active}`}>{p.desc}</p>
 
-      {/* product — real screenshots from public/work; two stacked when the project
-          has a pair, a single framed card when it only has one. */}
-      <Link className="ss-product" href={`/work/${p.slug}`} key={`prod-${active}`} aria-label={`Open ${p.name} case study`}>
-        {back ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img className="shot back" src={back} alt={`${p.name} screenshot`} />
-        ) : null}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className={`shot front${back ? "" : " solo"}`} src={front} alt={`${p.name} screenshot`} />
+      {/* one browser-window mockup of the project's screenshot */}
+      <Link className="ss-mock" href={`/work/${p.slug}`} key={`mock-${active}`} aria-label={`Open ${p.name} case study`}>
+        <span className="ss-mock-bar"><span className="dot" /><span className="dot" /><span className="dot" /></span>
+        <span className="ss-mock-screen">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={shot} alt={`${p.name} screenshot`} />
+        </span>
       </Link>
 
-      {/* big name + discipline — vertically centred in the mid-left (MetaLab style) */}
+      {/* big name + discipline — bottom-left (MetaLab style) */}
       <Link className="ss-foot" href={`/work/${p.slug}`} key={`foot-${active}`}>
         <div className="ss-name">{p.name}</div>
         <div className="ss-disc">{p.disc}</div>
