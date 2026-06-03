@@ -3,12 +3,10 @@
 // /work/[slug] detail pages so everything stays in sync.
 //
 // Product mockups, case-study heroes and galleries use real screenshots of the
-// live sites (public/work/<slug>/…), served from /public in dev and from R2 in
-// production. Showcase backgrounds stay atmospheric (stock) for legibility
-// behind the white project name. Where a real screenshot is missing for a slot,
-// a stock image is used as a graceful fallback.
-
-// Stock image helper — resolves to Cloudflare R2 when configured, else Unsplash.
+// live sites (public/work/<slug>/…), served straight from /public. Showcase
+// backgrounds stay atmospheric (Unsplash stock) for legibility behind the white
+// project name. Where a real screenshot is missing for a slot, a stock image is
+// used as a graceful fallback.
 import { img, local } from "./images";
 const U = (id: string, w = 2000) => img(id, w);
 const P = (id: string) => img(id, 900);
