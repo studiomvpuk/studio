@@ -1,8 +1,10 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
 export default function ClientEffects() {
+  const pathname = usePathname();
   useEffect(() => {
     // live UK clock
     const clock = document.getElementById("clock");
@@ -63,7 +65,7 @@ export default function ClientEffects() {
       cio.disconnect();
       window.removeEventListener("scroll", navTheme);
     };
-  }, []);
+  }, [pathname]);
 
   return null;
 }

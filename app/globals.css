@@ -301,3 +301,28 @@ a { color: inherit; text-decoration: none; }
 .doc-page .ok { text-align: center; padding: 40px 0; }
 .doc-page .ok .big { font-family: var(--display); font-size: 2.4rem; margin: 10px 0; }
 .doc-page .err { color: #c0392b; font-size: .9rem; margin-top: 10px; }
+
+/* ── site nav links (multi-page) ── */
+.mvp nav .links { display: flex; align-items: center; gap: 4px; }
+.mvp nav .links a {
+  font-size: .82rem; color: var(--grey-2); padding: 9px 15px; border-radius: 40px; transition: .25s;
+}
+.mvp nav .links a:hover { color: var(--white); background: var(--panel-2); }
+.mvp nav .links a.on { color: var(--white); background: var(--panel-2); }
+.mvp nav.light .links a { color: #6a6a64; }
+.mvp nav.light .links a:hover, .mvp nav.light .links a.on { color: var(--ink); background: #ececec; }
+.mvp .nav-left { display: flex; align-items: center; gap: 22px; }
+.mvp .page-top { padding-top: 150px; }
+.mvp .page-hero-head { padding: 150px 0 0; }
+.mvp .burger-pill { display: none; }
+@media (max-width: 980px) {
+  .mvp nav .links { display: none; }
+  .mvp nav .links.open {
+    display: flex; flex-direction: column; align-items: stretch; gap: 4px;
+    position: fixed; inset: 0; top: 64px; padding: 18px;
+    background: rgba(8,8,8,.97); backdrop-filter: blur(14px); z-index: 95;
+  }
+  .mvp nav.light .links.open { background: rgba(243,242,239,.98); }
+  .mvp nav .links.open a { font-size: 1.4rem; font-family: var(--display); padding: 16px 14px; }
+  .mvp .burger-pill { display: inline-flex; }
+}
