@@ -27,10 +27,27 @@ export default function ProjectDetail({ project }: { project: Project }) {
         </div>
       </header>
 
-      {/* Hero — full-bleed, revealed beneath the header. */}
+      {/* Hero — framed device mockup, consistent with the showcase. */}
       <div className="pd-hero">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={p.hero} alt={`${p.name} — hero`} />
+        <div className="wrap">
+          {p.frame === "phone" ? (
+            <div className="pd-frame pd-phone">
+              <span className="pd-notch" />
+              <span className="pd-screen">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={p.hero} alt={`${p.name} — hero`} />
+              </span>
+            </div>
+          ) : (
+            <div className="pd-frame pd-browser">
+              <span className="pd-bar"><i /><i /><i /></span>
+              <span className="pd-screen">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={p.hero} alt={`${p.name} — hero`} />
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Introduction. */}

@@ -404,15 +404,24 @@ a { color: inherit; text-decoration: none; }
 .mvp .pd-meta-k { font-size: .74rem; letter-spacing: .14em; text-transform: uppercase; color: #fff; margin-bottom: 8px; }
 .mvp .pd-meta-v { color: var(--grey-2); font-size: .98rem; line-height: 1.5; }
 
-/* hero — full-bleed, gentle scale-in on load. */
-.mvp .pd-hero {
-  width: 100vw; margin-left: calc(-50vw + 50%);
-  height: clamp(360px, 78vh, 820px); overflow: hidden; background: #0d0d0d;
-  animation: pdFade 1.2s ease .25s both;
+/* hero — framed device mockup (browser or phone), gentle fade-in. */
+.mvp .pd-hero { animation: pdFade 1.2s ease .25s both; }
+@keyframes pdFade { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+.mvp .pd-frame { margin: 0 auto; box-shadow: 0 70px 130px -50px rgba(0,0,0,.9); }
+/* browser window */
+.mvp .pd-browser { max-width: 1040px; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); background: #0d0d0d; }
+.mvp .pd-bar { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 18px; background: #161616; border-bottom: 1px solid var(--line-2); }
+.mvp .pd-bar i { width: 11px; height: 11px; border-radius: 50%; background: #3a3a3a; }
+.mvp .pd-browser .pd-screen { display: block; aspect-ratio: 16 / 9; }
+.mvp .pd-screen img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
+/* phone */
+.mvp .pd-phone {
+  position: relative; width: min(74vw, 320px); aspect-ratio: 9 / 19.3;
+  background: #0b0b0b; border: 1px solid var(--line); border-radius: 46px; padding: 10px;
 }
-.mvp .pd-hero img { width: 100%; height: 100%; object-fit: cover; animation: pdHeroZoom 1.8s cubic-bezier(.2,.8,.25,1) both; }
-@keyframes pdFade { from { opacity: 0; } to { opacity: 1; } }
-@keyframes pdHeroZoom { from { transform: scale(1.08); } to { transform: scale(1); } }
+.mvp .pd-phone .pd-screen { width: 100%; height: 100%; border-radius: 36px; overflow: hidden; background: #000; }
+.mvp .pd-notch { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 36%; height: 22px; background: #0b0b0b; border-radius: 0 0 15px 15px; z-index: 2; }
 
 /* introduction */
 .mvp .pd-intro { padding: clamp(64px, 11vh, 130px) 0 clamp(20px, 4vh, 40px); }
