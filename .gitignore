@@ -2,6 +2,10 @@ node_modules
 .next
 out
 .DS_Store
+**/.DS_Store
 *.log
 .env*.local
 tsconfig.tsbuildinfo
+
+# Raw image sources — uploaded to R2 by scripts/sync-images-to-r2.mjs, not deployed
+/public/screenshots/

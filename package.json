@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "db:setup": "node scripts/db-setup.mjs"
+    "db:setup": "node scripts/db-setup.mjs",
+    "images:r2": "node scripts/sync-images-to-r2.mjs"
   },
   "dependencies": {
     "jose": "^5.9.6",
@@ -18,6 +19,7 @@
     "stripe": "^17.5.0"
   },
   "devDependencies": {
+    "@aws-sdk/client-s3": "^3.717.0",
     "@types/node": "^22",
     "@types/pg": "^8.11.10",
     "@types/react": "^19",
