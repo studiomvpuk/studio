@@ -54,26 +54,29 @@ const projects = [
 
 export default function Showcase() {
   const [active, setActive] = useState(0);
-  const [fade, setFade] = useState(false);
+  const [prev, setPrev] = useState(0);
 
   const select = (i: number) => {
     if (i === active) return;
-    setFade(true);
-    window.setTimeout(() => { setActive(i); setFade(false); }, 240);
+    setPrev(active);
+    setActive(i);
   };
 
   const p = projects[active];
-  const f = fade ? " fade" : "";
 
   return (
     <div className="ss-stage">
-      {/* full-bleed background */}
-      <div className={`ss-bg${f}`} key={p.bg}>
+      {/* cross-fading background — previous layer underneath, new layer fades in on top */}
+      <div className="ss-bg under" aria-hidden>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={p.bg} alt="" aria-hidden />
+        <img src={projects[prev].bg} alt="" />
+      </div>
+      <div className="ss-bg over" key={`bg-${active}`} aria-hidden>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={p.bg} alt="" />
       </div>
 
-      {/* project list — pinned to the far-left edge */}
+      {/* project list — pinned to the far-left viewport edge */}
       <div className="ss-list">
         {projects.map((proj, i) => (
           <button
@@ -88,21 +91,21 @@ export default function Showcase() {
         <a className="ss-item all" href="/work">All work →</a>
       </div>
 
-      {/* description — top */}
-      <p className={`ss-desc${f}`}>{p.desc}</p>
+      {/* description — slides down from the top */}
+      <p className="ss-desc" key={`desc-${active}`}>{p.desc}</p>
 
-      {/* product shot — two iterations, far-right edge */}
-      <div className={`ss-product${f}`}>
+      {/* product shot — two iterations slide in from the right, staggered (second on top) */}
+      <div className="ss-product" key={`prod-${active}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="shot back" src={p.shots[1]} alt={`${p.name} product`} />
+        <img className="shot back" src={p.shots[0]} alt={`${p.name} product`} />
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="shot front" src={p.shots[0]} alt={`${p.name} product`} />
+        <img className="shot front" src={p.shots[1]} alt={`${p.name} product`} />
       </div>
 
-      {/* big name + discipline — lower-left */}
-      <div className="ss-foot">
-        <div className={`ss-name${f}`}>{p.name}</div>
-        <div className={`ss-disc${f}`}>{p.disc}</div>
+      {/* big name + discipline — slide up from the bottom, staggered */}
+      <div className="ss-foot" key={`foot-${active}`}>
+        <div className="ss-name">{p.name}</div>
+        <div className="ss-disc">{p.disc}</div>
       </div>
     </div>
   );
