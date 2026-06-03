@@ -5,7 +5,7 @@ const gbp = (cents: number) => "£" + (cents / 100).toLocaleString("en-GB");
 export type AdminData = {
   live: boolean;
   stats: { k: string; v: string; delta: string; warn?: boolean }[];
-  projects: { name: string; phase: string; pay: string; badge: string; status: string }[];
+  projects: { id: string | null; name: string; phase: string; pay: string; badge: string; status: string }[];
   leads: { name: string; status: string; est: string }[];
 };
 
@@ -13,9 +13,9 @@ export async function getAdminData(): Promise<AdminData> {
   if (!dbConfigured) return { ...demoAdmin, live: false };
 
   const projects = await safeQuery<{
-    name: string; current_phase: string; total_cents: number; paid_cents: number;
+    id: string; name: string; current_phase: string; total_cents: number; paid_cents: number;
   }>(`
-    select p.name, p.current_phase, p.total_cents,
+    select p.id, p.name, p.current_phase, p.total_cents,
            coalesce((select sum(amount_cents) from invoices i where i.project_id = p.id and i.status='paid'),0) as paid_cents
       from projects p where p.status in ('active','signed') order by p.created_at desc
   `);
@@ -44,7 +44,7 @@ export async function getAdminData(): Promise<AdminData> {
     projects: projects.map((p) => {
       const paid = p.paid_cents >= p.total_cents && p.total_cents > 0;
       return {
-        name: p.name, phase: p.current_phase,
+        id: p.id, name: p.name, phase: p.current_phase,
         pay: `${gbp(p.paid_cents)} / ${gbp(p.total_cents)}`,
         badge: paid ? "b-ok" : "b-warn",
         status: paid ? "Paid in full" : "Balance due",
@@ -56,6 +56,7 @@ export async function getAdminData(): Promise<AdminData> {
 
 export type ClientData = {
   live: boolean;
+  projectId: string | null;
   project: string;
   phaseLabel: string;
   pct: number;
@@ -64,6 +65,8 @@ export type ClientData = {
   paid: string;
   outstanding: string;
   balanceInvoiceId: string | null;
+  approvals: { id: string; item: string; status: "pending" | "approved" | "changes"; when: string }[];
+  messages: { author: string; body: string; mine: boolean }[];
 };
 
 export async function getClientData(clientId?: string): Promise<ClientData> {
@@ -88,13 +91,24 @@ export async function getClientData(clientId?: string): Promise<ClientData> {
     [p.id]
   );
 
+  const approvalRows = await safeQuery<{ id: string; item: string; status: "pending" | "approved" | "changes"; created_at: string }>(
+    `select id, item, status, created_at from approvals where project_id = $1 order by created_at desc`,
+    [p.id]
+  );
+  const messageRows = await safeQuery<{ author: string; body: string }>(
+    `select author, body from messages where project_id = $1 order by created_at asc limit 30`,
+    [p.id]
+  );
+
   const paidCents = invoices.filter((i) => i.status === "paid").reduce((s, i) => s + i.amount_cents, 0);
   const dueBalance = invoices.find((i) => i.status === "due" && (i.type === "balance" || i.type === "full"));
   const done = phases.filter((x) => x.state === "done").length;
   const pct = phases.length ? Math.round((done / phases.length) * 100) : 0;
+  const rel = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
   return {
     live: true,
+    projectId: p.id,
     project: p.name,
     phaseLabel: `${p.current_phase}${p.est_launch ? ` · Estimated launch ${new Date(p.est_launch).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : ""}`,
     pct,
@@ -103,6 +117,8 @@ export async function getClientData(clientId?: string): Promise<ClientData> {
     paid: gbp(paidCents),
     outstanding: gbp(p.total_cents - paidCents),
     balanceInvoiceId: dueBalance?.id ?? null,
+    approvals: approvalRows.map((a) => ({ id: a.id, item: a.item, status: a.status, when: rel(a.created_at) })),
+    messages: messageRows.map((m) => ({ author: m.author, body: m.body, mine: m.author === "client" })),
   };
 }
 
@@ -116,10 +132,10 @@ const demoAdmin: AdminData = {
     { k: "Active projects", v: "4", delta: "1 launching soon" },
   ],
   projects: [
-    { name: "NaijaEats", phase: "Build", pay: "£4k / £8k", badge: "b-warn", status: "Balance due" },
-    { name: "KinCare", phase: "Design", pay: "£5k / £10k", badge: "b-info", status: "On track" },
-    { name: "Mira", phase: "—", pay: "£0 / £6k", badge: "b-warn", status: "Deposit due" },
-    { name: "Cove", phase: "Test", pay: "£7k / £7k", badge: "b-ok", status: "Paid in full" },
+    { id: null, name: "NaijaEats", phase: "Build", pay: "£4k / £8k", badge: "b-warn", status: "Balance due" },
+    { id: null, name: "KinCare", phase: "Design", pay: "£5k / £10k", badge: "b-info", status: "On track" },
+    { id: null, name: "Mira", phase: "—", pay: "£0 / £6k", badge: "b-warn", status: "Deposit due" },
+    { id: null, name: "Cove", phase: "Test", pay: "£7k / £7k", badge: "b-ok", status: "Paid in full" },
   ],
   leads: [
     { name: "QuickFix", status: "new", est: "£6k" },
@@ -129,6 +145,7 @@ const demoAdmin: AdminData = {
 
 const demoClient: ClientData = {
   live: false,
+  projectId: null,
   project: "NaijaEats — Food delivery app",
   phaseLabel: "Phase 3 of 5 · Estimated launch 12 Aug 2026",
   pct: 62,
@@ -143,4 +160,12 @@ const demoClient: ClientData = {
   paid: "£4,000",
   outstanding: "£4,000",
   balanceInvoiceId: null,
+  approvals: [
+    { id: "demo-1", item: "Checkout flow — Build preview", status: "pending", when: "2h ago" },
+    { id: "demo-2", item: "Home screen design", status: "approved", when: "4 Jun" },
+  ],
+  messages: [
+    { author: "team", body: "Build preview is up — take a look at the checkout when you get a sec.", mine: false },
+    { author: "client", body: "Looks great, approving the home screen now.", mine: true },
+  ],
 };

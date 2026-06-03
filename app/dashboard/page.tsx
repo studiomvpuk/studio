@@ -4,6 +4,8 @@ import "./client.css";
 import { getSession } from "@/lib/auth";
 import { getClientData } from "@/lib/data";
 import PayBalanceButton from "./PayBalanceButton";
+import Approvals from "./Approvals";
+import Messages from "./Messages";
 
 export const metadata: Metadata = { title: "StudioMVP — Client Dashboard" };
 
@@ -96,12 +98,8 @@ export default async function ClientDashboard() {
               <div className="inv"><span>Balance invoice</span><span className="badge b-warn">Due before launch</span></div>
             </div>
 
-            {/* APPROVALS */}
-            <div className="card">
-              <div className="ch"><span className="ct">Awaiting your approval</span><span className="badge b-warn">1</span></div>
-              <div className="item"><div className="ic">◳</div><div className="t">Checkout flow — Build preview<small>Uploaded 2 hours ago</small></div><a className="link">Review</a></div>
-              <div className="item"><div className="ic">✓</div><div className="t">Home screen design<small>Approved 4 days ago</small></div><span className="badge b-ok">Approved</span></div>
-            </div>
+            {/* APPROVALS (live) */}
+            <Approvals initial={data.approvals} />
 
             {/* DOCUMENTS */}
             <div className="card">
@@ -111,13 +109,8 @@ export default async function ClientDashboard() {
               <div className="item"><div className="ic">⤓</div><div className="t">Brand assets (your upload)<small>ZIP · 14 files</small></div><a className="link">View</a></div>
             </div>
 
-            {/* MESSAGES */}
-            <div className="card">
-              <div className="ch"><span className="ct">Messages</span><span className="badge b-info">New</span></div>
-              <div className="item"><div className="ic">◔</div><div className="t">StudioMVP team<small>&ldquo;Build preview is up — take a look at the checkout when you get a sec.&rdquo;</small></div></div>
-              <div className="item"><div className="ic">◔</div><div className="t">You<small>&ldquo;Looks great, approving the home screen now.&rdquo;</small></div></div>
-              <a className="link" style={{ display: "inline-block", marginTop: 14 }}>Open conversation →</a>
-            </div>
+            {/* MESSAGES (live) */}
+            <Messages initial={data.messages} projectId={data.projectId} />
           </div>
 
           <div style={{ marginTop: 30, display: "flex", gap: 8, alignItems: "center" }}>

@@ -4,6 +4,7 @@ import "./admin.css";
 import { getSession } from "@/lib/auth";
 import { getAdminData } from "@/lib/data";
 import PaymentTerms from "./PaymentTerms";
+import ProjectActions from "./ProjectActions";
 
 export const metadata: Metadata = { title: "StudioMVP — Admin Portal" };
 
@@ -104,13 +105,14 @@ export default async function AdminPage() {
               <div className="ct">Active projects <span className="badge b-mute">{data.projects.length}</span></div>
               <table>
                 <tbody>
-                  <tr><th>Project</th><th>Phase</th><th>Payment</th><th>Status</th></tr>
+                  <tr><th>Project</th><th>Phase</th><th>Payment</th><th>Status</th><th></th></tr>
                   {data.projects.map((p) => (
                     <tr key={p.name}>
                       <td><div className="pname">{p.name}</div></td>
                       <td>{p.phase}</td>
                       <td>{p.pay}</td>
                       <td><span className={`badge ${p.badge}`}>{p.status}</span></td>
+                      <td><ProjectActions projectId={p.id} /></td>
                     </tr>
                   ))}
                 </tbody>
