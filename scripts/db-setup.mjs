@@ -29,7 +29,7 @@ const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl }
 
 const seed = `
 insert into users (role, name, email) values
-  ('admin', 'Tolu Olonibua', 'admin@studiomvp.co.uk'),
+  ('admin', 'StudioMVP', 'officialstudiomvp@gmail.com'),
   ('client', 'Amara O.', 'amara@example.com')
 on conflict (email) do nothing;
 
@@ -69,7 +69,7 @@ try {
   console.log("✓ schema applied");
   await client.query(seed);
   console.log("✓ demo data seeded");
-  console.log("\nDemo logins (magic-link): admin@studiomvp.co.uk · amara@example.com");
+  console.log("\nDemo logins (magic-link): officialstudiomvp@gmail.com · amara@example.com");
 } catch (e) {
   console.error("✗ setup failed:", e.message);
   process.exit(1);
