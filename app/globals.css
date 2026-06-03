@@ -135,12 +135,12 @@ a { color: inherit; text-decoration: none; }
 }
 /* cross-fading background: previous layer stays, new layer fades in on top (no flash) — bigger & closer */
 .mvp .ss-bg { position: absolute; inset: 0; z-index: 0; }
-.mvp .ss-bg img { width: 100%; height: 100%; object-fit: cover; opacity: 0.62; }
-.mvp .ss-bg.under img { transform: scale(1.03); }
+.mvp .ss-bg img { width: 100%; height: 100%; object-fit: cover; object-position: top center; opacity: 0.5; filter: blur(3px) saturate(1.05); transform: scale(1.06); }
+.mvp .ss-bg.under img { transform: scale(1.08); }
 .mvp .ss-bg.over { animation: ssFadeIn 1.6s ease both; }
 .mvp .ss-bg.over img { animation: ssBgZoom 11s ease-out both; }
 @keyframes ssFadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes ssBgZoom { from { transform: scale(1.1); } to { transform: scale(1.03); } }
+@keyframes ssBgZoom { from { transform: scale(1.12); } to { transform: scale(1.06); } }
 /* legibility gradient (light enough to let the image read big) */
 .mvp .ss-stage::after {
   content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;

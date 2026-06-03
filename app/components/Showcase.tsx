@@ -4,28 +4,38 @@ import { useState } from "react";
 import Link from "next/link";
 import { projects } from "../(site)/projects";
 
-// Selected-work showcase. It shows ONLY real screenshots from public/work/<slug>.
-// Projects that don't have a screenshot yet are skipped here (they still appear
-// on the full /work list).
+// Selected-work showcase. Every image is a real screenshot from public/work/<slug>:
+// the project's own shot fills the background (dimmed) AND the crisp foreground card.
+// Projects without a screenshot yet are skipped here (still on the full /work list).
 const shown = projects.filter((p) => p.shots.length > 0);
 
 export default function Showcase() {
   const [active, setActive] = useState(0);
-  const select = (i: number) => setActive(i);
+  const [prev, setPrev] = useState(0);
+
+  const select = (i: number) => {
+    if (i === active) return;
+    setPrev(active);
+    setActive(i);
+  };
 
   const p = shown[active];
   const back = p.shots.length > 1 ? p.shots[0] : null;
   const front = p.shots[p.shots.length - 1];
+  const prevFront = shown[prev].shots[shown[prev].shots.length - 1];
 
   return (
     <div className="ss-stage">
-      {/* Atmospheric backgrounds removed — they were Unsplash stock, not the real
-          sites. The stage now sits on a flat dark canvas so only public/work
-          screenshots show. (Old cross-fading background kept here, commented out,
-          in case we later want a blurred hero behind the stage.)
-      <div className="ss-bg under" aria-hidden><img src={shown[prev].bg} alt="" /></div>
-      <div className="ss-bg over" key={`bg-${active}`} aria-hidden><img src={p.bg} alt="" /></div>
-      */}
+      {/* background = the active project's own screenshot, dimmed + blurred for
+          legibility. Cross-fades: previous layer underneath, new layer fades in. */}
+      <div className="ss-bg under" aria-hidden>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={prevFront} alt="" />
+      </div>
+      <div className="ss-bg over" key={`bg-${active}`} aria-hidden>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={front} alt="" />
+      </div>
 
       {/* project list — pinned to the far-left viewport edge.
           Hover previews the project; clicking opens its case study. */}
