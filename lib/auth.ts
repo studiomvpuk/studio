@@ -1,0 +1,107 @@
+import { cookies } from "next/headers";
+import { createHash, randomBytes } from "node:crypto";
+import { SignJWT, jwtVerify } from "jose";
+import { query, safeQuery } from "./db";
+
+export type Role = "prospect" | "client" | "admin";
+export type Session = { userId: string; email: string; role: Role; name: string | null };
+
+const COOKIE = "mvp_session";
+const secret = () =>
+  new TextEncoder().encode(process.env.SESSION_SECRET || "dev-insecure-secret-change-me");
+
+/* ── session cookie (stateless JWT) ── */
+export async function createSession(s: Session) {
+  const token = await new SignJWT(s as unknown as Record<string, unknown>)
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("30d")
+    .sign(secret());
+  (await cookies()).set(COOKIE, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30,
+  });
+}
+
+export async function getSession(): Promise<Session | null> {
+  const token = (await cookies()).get(COOKIE)?.value;
+  if (!token) return null;
+  try {
+    const { payload } = await jwtVerify(token, secret());
+    return {
+      userId: String(payload.userId),
+      email: String(payload.email),
+      role: payload.role as Role,
+      name: (payload.name as string) ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function clearSession() {
+  (await cookies()).delete(COOKIE);
+}
+
+/* ── magic-link tokens (DB-backed) ── */
+const hash = (t: string) => createHash("sha256").update(t).digest("hex");
+
+export async function createMagicToken(email: string): Promise<string> {
+  const token = randomBytes(32).toString("hex");
+  const expires = new Date(Date.now() + 1000 * 60 * 30); // 30 min
+  await query(
+    `insert into magic_tokens (email, token_hash, expires_at) values ($1, $2, $3)`,
+    [email.toLowerCase().trim(), hash(token), expires]
+  );
+  return token;
+}
+
+/** Verify a magic token, find-or-create the user, and return them. Returns null if invalid. */
+export async function consumeMagicToken(token: string): Promise<Session | null> {
+  const rows = await safeQuery<{ id: string; email: string }>(
+    `update magic_tokens set used = true
+       where token_hash = $1 and used = false and expires_at > now()
+       returning id, email`,
+    [hash(token)]
+  );
+  if (!rows.length) return null;
+  const email = rows[0].email;
+
+  let users = await query<{ id: string; email: string; role: Role; name: string | null }>(
+    `select id, email, role, name from users where email = $1`,
+    [email]
+  );
+  if (!users.length) {
+    users = await query(
+      `insert into users (email, role) values ($1, 'prospect') returning id, email, role, name`,
+      [email]
+    );
+  }
+  const u = users[0];
+  return { userId: u.id, email: u.email, role: u.role, name: u.name };
+}
+
+/* ── magic-link email (Resend if configured, else dev log) ── */
+export async function sendMagicLink(email: string, link: string): Promise<{ devLink?: string }> {
+  if (process.env.RESEND_API_KEY) {
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: process.env.EMAIL_FROM || "StudioMVP <onboarding@resend.dev>",
+        to: email,
+        subject: "Your StudioMVP sign-in link",
+        html: `<p>Click to sign in to StudioMVP:</p><p><a href="${link}">${link}</a></p><p>This link expires in 30 minutes.</p>`,
+      }),
+    });
+    return {};
+  }
+  console.log(`\n🔗 Magic link for ${email}:\n${link}\n`);
+  return { devLink: link };
+}

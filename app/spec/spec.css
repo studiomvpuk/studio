@@ -1,0 +1,70 @@
+/* ───────── CLIENT PORTAL SPEC (.spec-doc) ───────── */
+.spec-doc {
+  --ink: #0a0a0c; --grey: #5b5b63; --grey-2: #9a9aa2; --white: #fff; --paper: #f7f7f6;
+  --hair: #e7e7e6; --ok: #1f9d5b; --warn: #c98a16; --info: #3358d4;
+  background: var(--white);
+  color: var(--ink);
+  font-weight: 300;
+  line-height: 1.7;
+}
+.spec-doc .layout { display: grid; grid-template-columns: 280px 1fr; max-width: 1400px; margin: 0 auto; min-height: 100vh; }
+
+.spec-doc aside { position: sticky; top: 0; height: 100vh; border-right: 1px solid var(--hair); padding: 40px 30px; overflow-y: auto; }
+.spec-doc aside .brand { font-family: var(--display); font-size: 1.5rem; margin-bottom: 6px; }
+.spec-doc aside .sub { font-size: 0.74rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--grey-2); margin-bottom: 34px; }
+.spec-doc aside nav a { display: block; font-size: 0.9rem; color: var(--grey); text-decoration: none; padding: 8px 0; border-bottom: 1px solid transparent; transition: 0.2s; }
+.spec-doc aside nav a:hover { color: var(--ink); }
+.spec-doc aside .grp { font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--grey-2); margin: 24px 0 8px; }
+
+.spec-doc main { padding: 80px 70px 120px; max-width: 900px; }
+.spec-doc .doc-head { margin-bottom: 60px; }
+.spec-doc .doc-head .tag { display: inline-block; font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--grey); border: 1px solid var(--hair); border-radius: 40px; padding: 7px 15px; margin-bottom: 24px; }
+.spec-doc h1 { font-family: var(--display); font-weight: 400; font-size: clamp(2.6rem, 5vw, 4rem); line-height: 1.02; letter-spacing: -0.02em; margin-bottom: 18px; }
+.spec-doc .doc-head p { font-size: 1.18rem; color: var(--grey); max-width: 60ch; }
+.spec-doc section { padding: 46px 0; border-top: 1px solid var(--hair); }
+.spec-doc h2 { font-family: var(--display); font-weight: 400; font-size: 2.1rem; letter-spacing: -0.01em; margin-bottom: 8px; display: flex; align-items: baseline; gap: 14px; }
+.spec-doc h2 .no { font-size: 0.9rem; font-family: var(--body); font-weight: 600; color: var(--grey-2); letter-spacing: 0.05em; }
+.spec-doc h3 { font-size: 1.05rem; font-weight: 600; margin: 28px 0 10px; }
+.spec-doc p { margin-bottom: 14px; color: #2c2c33; }
+.spec-doc ul, .spec-doc ol { margin: 0 0 16px 0; padding-left: 22px; }
+.spec-doc li { margin-bottom: 8px; color: #2c2c33; }
+.spec-doc strong { font-weight: 600; color: var(--ink); }
+.spec-doc .lead { font-size: 1.08rem; color: var(--grey); margin-bottom: 24px; }
+
+.spec-doc .flow { counter-reset: step; margin: 24px 0; }
+.spec-doc .step { display: grid; grid-template-columns: 48px 1fr; gap: 20px; padding: 22px 0; border-bottom: 1px solid var(--hair); }
+.spec-doc .step:last-child { border-bottom: none; }
+.spec-doc .step .sn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--ink); display: flex; align-items: center; justify-content: center; font-family: var(--display); font-size: 1.2rem; }
+.spec-doc .step h4 { font-size: 1.15rem; font-weight: 600; margin-bottom: 6px; }
+.spec-doc .step p { margin-bottom: 8px; font-size: 0.96rem; }
+.spec-doc .step .who { font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--grey-2); }
+.spec-doc .step .auto { display: inline-block; margin-top: 8px; font-size: 0.8rem; background: var(--paper); border: 1px solid var(--hair); border-radius: 8px; padding: 8px 12px; color: var(--grey); }
+.spec-doc .step .auto b { color: var(--ink); font-weight: 600; }
+
+.spec-doc table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 0.92rem; }
+.spec-doc th, .spec-doc td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--hair); vertical-align: top; }
+.spec-doc th { font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--grey-2); font-weight: 600; }
+.spec-doc td code { background: var(--paper); padding: 2px 6px; border-radius: 5px; font-size: 0.86em; }
+
+.spec-doc .badge { display: inline-block; font-size: 0.72rem; font-weight: 600; padding: 4px 10px; border-radius: 30px; letter-spacing: 0.02em; }
+.spec-doc .b-ok { background: rgba(31, 157, 91, 0.12); color: var(--ok); }
+.spec-doc .b-warn { background: rgba(201, 138, 22, 0.14); color: var(--warn); }
+.spec-doc .b-info { background: rgba(51, 88, 212, 0.12); color: var(--info); }
+.spec-doc .b-mute { background: var(--paper); color: var(--grey); }
+
+.spec-doc .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+.spec-doc .card { border: 1px solid var(--hair); border-radius: 14px; padding: 24px; }
+.spec-doc .card h4 { font-family: var(--display); font-weight: 400; font-size: 1.3rem; margin-bottom: 8px; }
+.spec-doc .card ul { margin: 0; padding-left: 18px; }
+.spec-doc .card li { font-size: 0.9rem; }
+.spec-doc .callout { background: var(--paper); border: 1px solid var(--hair); border-left: 3px solid var(--ink); border-radius: 10px; padding: 20px 24px; margin: 20px 0; }
+.spec-doc .callout .ct { font-weight: 600; margin-bottom: 6px; }
+.spec-doc .pill-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0; }
+.spec-doc .pill { font-size: 0.8rem; border: 1px solid var(--hair); border-radius: 30px; padding: 7px 14px; color: var(--grey); }
+
+@media (max-width: 900px) {
+  .spec-doc .layout { grid-template-columns: 1fr; }
+  .spec-doc aside { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--hair); }
+  .spec-doc main { padding: 50px 28px 90px; }
+  .spec-doc .cards { grid-template-columns: 1fr; }
+}
