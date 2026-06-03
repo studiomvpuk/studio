@@ -490,6 +490,13 @@ a { color: inherit; text-decoration: none; }
   background: rgba(201, 138, 22, .12); border: 1px solid rgba(201, 138, 22, .3); color: #e6b450;
   border-radius: 10px; padding: 11px 14px; font-size: .86rem; line-height: 1.5; margin-bottom: 20px;
 }
+.auth-card .pay-line {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 16px 18px; margin: 6px 0 22px;
+}
+.auth-card .pay-line span { color: var(--grey); font-size: .95rem; }
+.auth-card .pay-amount { font-family: var(--display); font-size: 2.2rem; line-height: 1; color: var(--white); }
 
 /* ───────── PROPOSAL / SIGN (.doc-page) ───────── */
 .doc-page {

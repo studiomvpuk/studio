@@ -26,6 +26,25 @@ export async function POST(req: Request) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const invoiceId = session.metadata?.invoiceId;
+    const paymentLinkId = session.metadata?.paymentLinkId;
+
+    // Admin-generated payment link → mark it paid.
+    if (dbConfigured && paymentLinkId) {
+      const rows = await query<{ id: string; description: string; client_email: string | null; client_name: string | null }>(
+        `update payment_links set status = 'paid', paid_at = now(), stripe_payment_intent = $2
+          where id = $1 and status = 'open'
+        returning id, description, client_email, client_name`,
+        [paymentLinkId, String(session.payment_intent ?? "")]
+      );
+      if (rows.length) {
+        await dispatch("invoice.paid", {
+          paymentLinkId,
+          reference: rows[0].description,
+          email: rows[0].client_email,
+          name: rows[0].client_name || "there",
+        });
+      }
+    }
 
     if (dbConfigured && invoiceId) {
       // Never trust amount/state from the client — driven by the verified webhook.

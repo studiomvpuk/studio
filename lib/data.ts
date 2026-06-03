@@ -11,6 +11,7 @@ const STATUS_LABELS: Record<string, string> = {
   draft: "Draft", sent: "Sent", viewed: "Viewed", declined: "Declined",
   active: "Active", completed: "Completed", lead: "Lead", due: "Due", paid: "Paid",
   pending: "Pending", approved: "Approved", changes: "Changes requested",
+  open: "Unpaid", void: "Void",
 };
 const label = (s: string) => STATUS_LABELS[s] || s;
 
@@ -339,6 +340,33 @@ export async function getClientData(clientId?: string): Promise<ClientData> {
     approvals: approvalRows.map((a) => ({ id: a.id, item: a.item, status: a.status, when: dayMonth(a.created_at) })),
     messages: messageRows.map((m) => ({ author: m.author, body: m.body, when: dayMonth(m.created_at) })),
   };
+}
+
+/* ───────── PAYMENT LINKS ───────── */
+export async function getPaymentLink(token: string): Promise<{ description: string; amount: string; status: string; clientName: string | null } | null> {
+  const rows = await safeQuery<{ description: string; amount_cents: number; status: string; client_name: string | null }>(
+    `select description, amount_cents, status, client_name from payment_links where token = $1`,
+    [token]
+  );
+  if (!rows.length) return null;
+  const r = rows[0];
+  return { description: r.description, amount: gbp(r.amount_cents), status: r.status, clientName: r.client_name };
+}
+
+export type PaymentLinkRow = { token: string; description: string; amount: string; status: string; badge: string; client: string; when: string };
+export async function getPaymentLinks(): Promise<PaymentLinkRow[]> {
+  const rows = await safeQuery<{ token: string; description: string; amount_cents: number; status: string; client_email: string | null; created_at: string; paid_at: string | null }>(
+    `select token, description, amount_cents, status, client_email, created_at, paid_at from payment_links order by created_at desc limit 50`
+  );
+  return rows.map((r) => ({
+    token: r.token,
+    description: r.description,
+    amount: gbp(r.amount_cents),
+    status: label(r.status),
+    badge: r.status === "paid" ? "b-ok" : r.status === "void" ? "b-mute" : "b-warn",
+    client: r.client_email || "—",
+    when: dayMonth(r.paid_at || r.created_at),
+  }));
 }
 
 /* ───────── ADMIN MESSAGES (inbox) ───────── */

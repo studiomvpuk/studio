@@ -110,6 +110,17 @@
 .admin-app .msg-mine .msg-meta { color: rgba(255, 255, 255, 0.6); }
 .admin-app .msg-body { font-size: 0.9rem; line-height: 1.45; }
 
+/* create payment link */
+.admin-app .pl-form { display: flex; flex-direction: column; }
+.admin-app .pl-form input { border: 1px solid var(--hair); border-radius: 10px; padding: 11px 13px; font-family: var(--body); font-size: 0.92rem; color: var(--ink); outline: none; margin-bottom: 6px; transition: 0.2s; }
+.admin-app .pl-form input:focus { border-color: var(--ink); }
+.admin-app .pl-form .lbl { margin-top: 8px; }
+.admin-app .pl-check { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; color: var(--grey); margin: 12px 0 2px; cursor: pointer; }
+.admin-app .pl-check input { width: auto; margin: 0; accent-color: var(--ink); }
+.admin-app .pl-done { color: var(--ok); font-weight: 600; font-size: 0.92rem; margin-bottom: 14px; }
+.admin-app .pl-url { display: flex; gap: 8px; }
+.admin-app .pl-url input { flex: 1; min-width: 0; border: 1px solid var(--hair); border-radius: 10px; padding: 11px 13px; font-size: 0.82rem; font-family: var(--body); background: var(--paper); color: var(--ink); outline: none; }
+
 /* messages inbox */
 .admin-app .thread-list { display: flex; flex-direction: column; }
 .admin-app .thread-row { display: flex; align-items: center; gap: 16px; padding: 16px 8px; border-bottom: 1px solid var(--hair); text-decoration: none; color: inherit; transition: 0.15s; border-radius: 8px; }

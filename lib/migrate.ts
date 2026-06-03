@@ -93,6 +93,19 @@ create table if not exists events (
   id uuid primary key default gen_random_uuid(),
   type text not null, payload jsonb, fired_at timestamptz not null default now()
 );
+
+create table if not exists payment_links (
+  id uuid primary key default gen_random_uuid(),
+  description text not null,
+  amount_cents integer not null,
+  client_email text, client_name text,
+  project_id uuid references projects(id) on delete set null,
+  status text not null default 'open' check (status in ('open','paid','void')),
+  token text unique not null,
+  stripe_session_id text, stripe_payment_intent text,
+  created_at timestamptz not null default now(), paid_at timestamptz
+);
+create index if not exists payment_links_token_idx on payment_links (token);
 `;
 
 // The admin account is created automatically. Override the email with ADMIN_EMAIL.
