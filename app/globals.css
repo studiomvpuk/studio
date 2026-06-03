@@ -33,7 +33,8 @@ a { color: inherit; text-decoration: none; }
   display: inline-flex; align-items: center; gap: 8px;
 }
 .mvp .pill:hover { border-color: var(--line); background: var(--panel); }
-.mvp .wordmark { font-family: var(--display); font-size: 1.7rem; }
+.mvp .wordmark { font-family: var(--display); font-size: 1.7rem; display: inline-flex; align-items: center; gap: 10px; }
+.mvp .logo-mark { width: 30px; height: 30px; border-radius: 7px; background: #fff; object-fit: contain; flex: none; }
 .mvp .nav-right { display: flex; align-items: center; gap: 14px; }
 .mvp .clock { font-size: 0.8rem; letter-spacing: 0.1em; color: var(--grey-2); font-variant-numeric: tabular-nums; }
 .mvp .icon-pill {
@@ -427,6 +428,7 @@ a { color: inherit; text-decoration: none; }
   color: var(--white); display: flex; align-items: center; justify-content: center; padding: 24px;
 }
 .auth-card { width: 100%; max-width: 420px; }
+.auth-card .auth-logo { width: 46px; height: 46px; border-radius: 11px; background: #fff; object-fit: contain; display: block; margin-bottom: 16px; }
 .auth-card .brand { font-family: var(--display); font-size: 2rem; margin-bottom: 8px; }
 .auth-card .sub { color: var(--grey); margin-bottom: 28px; font-size: .98rem; }
 .auth-card form { display: flex; flex-direction: column; gap: 12px; }

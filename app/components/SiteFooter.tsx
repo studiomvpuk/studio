@@ -5,7 +5,11 @@ export default function SiteFooter() {
     <footer>
       <div className="wrap">
         <div className="foot-top">
-          <Link href="/" className="wordmark">StudioMVP</Link>
+          <Link href="/" className="wordmark">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.jpg" alt="" className="logo-mark" />
+            StudioMVP
+          </Link>
           <div className="foot-links">
             <div className="foot-col">
               <h4>Studio</h4>

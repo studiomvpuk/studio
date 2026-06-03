@@ -14,7 +14,8 @@
   background: var(--ink); color: #e8e8e6; padding: 28px 22px;
   position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column;
 }
-.admin-app .side .brand { font-family: var(--display); font-size: 1.45rem; color: #fff; }
+.admin-app .side .brand { font-family: var(--display); font-size: 1.45rem; color: #fff; display: flex; align-items: center; gap: 10px; }
+.admin-app .side .brand .logo-mark { width: 34px; height: 34px; border-radius: 8px; background: #fff; object-fit: contain; flex: none; }
 .admin-app .side .brand small { display: block; font-family: var(--body); font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--grey-2); margin-top: 3px; }
 .admin-app .side nav { margin-top: 34px; display: flex; flex-direction: column; gap: 4px; }
 .admin-app .side nav a { display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 10px; color: #b9b9b6; text-decoration: none; font-size: 0.92rem; cursor: pointer; transition: 0.2s; }

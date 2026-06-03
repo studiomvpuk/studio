@@ -20,7 +20,11 @@ export default function SiteNav() {
   return (
     <nav id="nav">
       <div className="nav-left">
-        <Link href="/" className="wordmark">StudioMVP</Link>
+        <Link href="/" className="wordmark">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.jpg" alt="" className="logo-mark" />
+          StudioMVP
+        </Link>
         <div className={`links${open ? " open" : ""}`}>
           {links.map((l) => (
             <Link key={l.href} href={l.href} className={pathname === l.href ? "on" : ""}>{l.label}</Link>

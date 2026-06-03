@@ -33,6 +33,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   return (
     <div className="auth-page">
       <div className="auth-card">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.jpg" alt="StudioMVP" className="logo-mark auth-logo" />
         <div className="brand">StudioMVP</div>
         <div className="sub">Sign in to your client or admin portal.</div>
 

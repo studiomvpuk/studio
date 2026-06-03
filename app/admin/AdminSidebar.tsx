@@ -24,7 +24,9 @@ export default function AdminSidebar({ name, email }: { name: string; email: str
     <div className="side">
       <div>
         <div className="brand">
-          StudioMVP<small>Admin Portal</small>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.jpg" alt="" className="logo-mark" />
+          <span>StudioMVP<small>Admin Portal</small></span>
         </div>
         <nav>
           {links.map((l) => (

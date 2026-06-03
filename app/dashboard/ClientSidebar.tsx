@@ -21,7 +21,9 @@ export default function ClientSidebar({ name, email }: { name: string; email: st
     <div className="side">
       <div>
         <div className="brand">
-          StudioMVP<small>Client Portal</small>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.jpg" alt="" className="logo-mark" />
+          <span>StudioMVP<small>Client Portal</small></span>
         </div>
         <nav>
           {links.map((l) => (

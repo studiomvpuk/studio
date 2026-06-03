@@ -21,6 +21,10 @@ export const metadata: Metadata = {
   title: "StudioMVP — A product studio for founders who are serious.",
   description:
     "StudioMVP designs and builds investor-ready apps and platforms — from the first sketch to thousands of real users.",
+  icons: {
+    icon: [{ url: "/logo.jpg" }],
+    apple: [{ url: "/logo.jpg" }],
+  },
 };
 
 export default function RootLayout({
