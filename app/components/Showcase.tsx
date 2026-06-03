@@ -15,6 +15,7 @@ export default function Showcase() {
 
   const p = shown[active];
   const shot = p.shots[p.shots.length - 1];
+  const isPhone = p.frame === "phone";
 
   return (
     <div className="ss-stage">
@@ -40,14 +41,25 @@ export default function Showcase() {
       {/* description — slides down from the top */}
       <p className="ss-desc" key={`desc-${active}`}>{p.desc}</p>
 
-      {/* one browser-window mockup of the project's screenshot */}
-      <Link className="ss-mock" href={`/work/${p.slug}`} key={`mock-${active}`} aria-label={`Open ${p.name} case study`}>
-        <span className="ss-mock-bar"><span className="dot" /><span className="dot" /><span className="dot" /></span>
-        <span className="ss-mock-screen">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={shot} alt={`${p.name} screenshot`} />
-        </span>
-      </Link>
+      {/* device mockup of the project's screenshot — phone frame for mobile apps,
+          browser window for web projects */}
+      {isPhone ? (
+        <Link className="ss-phone" href={`/work/${p.slug}`} key={`mock-${active}`} aria-label={`Open ${p.name} case study`}>
+          <span className="ss-phone-notch" />
+          <span className="ss-phone-screen">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={shot} alt={`${p.name} screenshot`} />
+          </span>
+        </Link>
+      ) : (
+        <Link className="ss-mock" href={`/work/${p.slug}`} key={`mock-${active}`} aria-label={`Open ${p.name} case study`}>
+          <span className="ss-mock-bar"><span className="dot" /><span className="dot" /><span className="dot" /></span>
+          <span className="ss-mock-screen">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={shot} alt={`${p.name} screenshot`} />
+          </span>
+        </Link>
+      )}
 
       {/* big name + discipline — bottom-left (MetaLab style) */}
       <Link className="ss-foot" href={`/work/${p.slug}`} key={`foot-${active}`}>

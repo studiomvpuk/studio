@@ -41,6 +41,9 @@ export type Project = {
   gallery: GalleryRow[];
   /** Categories for the Work filter list. */
   cats: string[];
+  /** Showcase device frame. "browser" (default) suits landscape web screenshots;
+   *  "phone" suits portrait mobile screenshots (≈9:19.5). */
+  frame?: "browser" | "phone";
 };
 
 export const projects: Project[] = [
@@ -63,6 +66,10 @@ export const projects: Project[] = [
       { images: [local("/work/letsgohalf/shot-1.jpg"), local("/work/letsgohalf/shot-2.jpg")] },
     ],
     cats: ["fintech", "ios"],
+    // LetsGoHalf is an iOS app. Its current shots are landscape, so it stays on
+    // the browser frame for now — add portrait phone screenshots (≈9:19.5) to
+    // public/work/letsgohalf and switch this to "phone" to use the phone mockup.
+    frame: "browser",
   },
   {
     slug: "usa-errands",
