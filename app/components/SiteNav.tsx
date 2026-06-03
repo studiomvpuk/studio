@@ -25,13 +25,15 @@ export default function SiteNav() {
           {links.map((l) => (
             <Link key={l.href} href={l.href} className={pathname === l.href ? "on" : ""}>{l.label}</Link>
           ))}
-          <Link href="/contact" className="">Contact</Link>
+          <Link href="/contact">Contact</Link>
+          <Link href="/login" className="menu-cta">Portal</Link>
+          <Link href="/start" className="menu-cta">Start a project →</Link>
         </div>
       </div>
       <div className="nav-right">
         <span className="clock" id="clock">—</span>
-        <Link className="pill" href="/login">Portal</Link>
-        <Link className="pill" href="/start" style={{ background: "#fff", color: "#000" }}>Start a project</Link>
+        <Link className="pill desk-pill" href="/login">Portal</Link>
+        <Link className="pill desk-pill" href="/start" style={{ background: "#fff", color: "#000" }}>Start a project</Link>
         <button
           type="button"
           className="pill burger-pill"

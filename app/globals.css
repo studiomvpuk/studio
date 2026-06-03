@@ -312,17 +312,34 @@ a { color: inherit; text-decoration: none; }
 .mvp nav.light .links a { color: #6a6a64; }
 .mvp nav.light .links a:hover, .mvp nav.light .links a.on { color: var(--ink); background: #ececec; }
 .mvp .nav-left { display: flex; align-items: center; gap: 22px; }
-.mvp .page-top { padding-top: 150px; }
-.mvp .page-hero-head { padding: 150px 0 0; }
 .mvp .burger-pill { display: none; }
+.mvp nav .links .menu-cta { display: none; }
 @media (max-width: 980px) {
   .mvp nav .links { display: none; }
   .mvp nav .links.open {
     display: flex; flex-direction: column; align-items: stretch; gap: 4px;
-    position: fixed; inset: 0; top: 64px; padding: 18px;
-    background: rgba(8,8,8,.97); backdrop-filter: blur(14px); z-index: 95;
+    position: fixed; inset: 0; top: 60px; padding: 20px;
+    background: rgba(8,8,8,.98); backdrop-filter: blur(14px); z-index: 95;
   }
   .mvp nav.light .links.open { background: rgba(243,242,239,.98); }
-  .mvp nav .links.open a { font-size: 1.4rem; font-family: var(--display); padding: 16px 14px; }
+  .mvp nav .links.open a { font-size: 1.5rem; font-family: var(--display); padding: 16px 14px; border-bottom: 1px solid var(--line-2); }
+  .mvp nav .links.open .menu-cta { display: block; font-family: var(--body); font-size: .9rem; margin-top: 8px; border: 1px solid var(--line); border-radius: 40px; text-align: center; }
+  .mvp nav .links.open .menu-cta:last-child { background: #fff; color: #000; border-color: #fff; }
+  .mvp nav.light .links.open .menu-cta:last-child { background: var(--ink); color: #fff; }
   .mvp .burger-pill { display: inline-flex; }
+  .mvp .desk-pill { display: none; }
+  .mvp .nav-left { gap: 0; }
+}
+@media (max-width: 560px) {
+  .mvp .wordmark { font-size: 1.4rem; }
+  .mvp .hero { padding-top: 110px; }
+  .mvp .hero h1 { font-size: clamp(2.6rem, 11vw, 3.6rem); }
+  .mvp .hero .sub p { font-size: 1rem; }
+  .mvp section { padding: 84px 0; }
+  .mvp .pay { padding: 32px 20px; border-radius: 18px; }
+  .mvp .btns { width: 100%; }
+  .mvp .btn-w, .mvp .btn-o { flex: 1 1 auto; justify-content: center; }
+  .mvp .foot-links { gap: 28px; }
+  .mvp .imp-grid { gap: 30px 18px; }
+  .mvp main > section:first-child { padding-top: 120px; }
 }

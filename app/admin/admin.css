@@ -91,4 +91,13 @@
   .admin-app .side nav { display: none; }
   .admin-app .side .who { margin: 0; border: none; padding: 0; }
   .admin-app .main { padding: 24px 18px 60px; }
+  .admin-app .panels .card:first-child { overflow-x: auto; }
+  .admin-app .panels table { min-width: 460px; }
+  .admin-app .top { align-items: flex-start; }
+  .admin-app .top > div { flex-wrap: wrap; }
+}
+@media (max-width: 560px) {
+  .admin-app .stats { grid-template-columns: 1fr 1fr; }
+  .admin-app .cols { grid-template-columns: 1fr; }
+  .admin-app .top h1 { font-size: 1.8rem; }
 }
