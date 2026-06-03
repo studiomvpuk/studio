@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { dbConfigured, query } from "@/lib/db";
+import { dispatch } from "@/lib/automations";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
@@ -23,23 +24,7 @@ export async function POST(req: Request) {
     `insert into leads (name, email, brief, source, status) values ($1, $2, $3, 'website', 'new')`,
     [name || null, email, brief]
   );
-  await query(`insert into events (type, payload) values ('lead.created', $1)`, [
-    JSON.stringify({ email, name }),
-  ]);
-
-  // Auto: acknowledgement email (Resend if configured)
-  if (process.env.RESEND_API_KEY) {
-    await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from: process.env.EMAIL_FROM || "StudioMVP <onboarding@resend.dev>",
-        to: email,
-        subject: "Thanks — we've got your project brief",
-        html: `<p>Hi ${name || "there"},</p><p>Thanks for telling us about your idea. We'll review it and come back within a day with next steps.</p><p>— StudioMVP</p>`,
-      }),
-    }).catch(() => {});
-  }
+  await dispatch("lead.created", { email, name: name || "there" });
 
   return NextResponse.json({ ok: true });
 }

@@ -7,10 +7,30 @@ const fmt = (n: number) => "£" + n.toLocaleString();
 
 type Plan = "full" | "deposit" | "milestones";
 
-export default function PaymentTerms() {
+export default function PaymentTerms({ projectId }: { projectId?: string }) {
   const [plan, setPlan] = useState<Plan>("deposit");
   const [split, setSplit] = useState(50);
   const [gate, setGate] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState("");
+
+  async function save() {
+    setSaving(true);
+    setSaved("");
+    try {
+      const res = await fetch("/api/projects/terms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId, plan, depositPct: split, gate }),
+      });
+      const data = await res.json();
+      setSaved(res.ok ? (data.demo ? "Saved (demo — connect a project to persist)" : "Saved & invoice queued") : data.error || "Failed");
+    } catch {
+      setSaved("Network error");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   const dep = Math.round((TOTAL * split) / 100);
   const bal = TOTAL - dep;
@@ -65,7 +85,10 @@ export default function PaymentTerms() {
       )}
 
       <div className="summary">{summary}</div>
-      <button className="btn" style={{ width: "100%", marginTop: 14 }}>Save &amp; send invoice</button>
+      <button className="btn" style={{ width: "100%", marginTop: 14 }} onClick={save} disabled={saving}>
+        {saving ? "Saving…" : "Save & send invoice"}
+      </button>
+      {saved ? <div className="summary" style={{ marginTop: 10 }}>{saved}</div> : null}
     </div>
   );
 }

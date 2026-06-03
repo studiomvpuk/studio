@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { dbConfigured, query } from "@/lib/db";
 import { getStripe, stripeConfigured } from "@/lib/stripe";
+import { dispatch } from "@/lib/automations";
 
 // Stripe needs the raw body to verify the signature.
 export const runtime = "nodejs";
@@ -28,29 +29,23 @@ export async function POST(req: Request) {
 
     if (dbConfigured && invoiceId) {
       // Never trust amount/state from the client — driven by the verified webhook.
-      const inv = await query<{ id: string; project_id: string; type: string }>(
-        `update invoices
-            set status = 'paid', paid_at = now(),
-                stripe_payment_intent = $2
-          where id = $1
-        returning id, project_id, type`,
+      const inv = await query<{ id: string; project_id: string; type: string; email: string | null; name: string | null }>(
+        `update invoices i
+            set status = 'paid', paid_at = now(), stripe_payment_intent = $2
+           from projects p left join users u on u.id = p.client_id
+          where i.id = $1 and p.id = i.project_id
+        returning i.id, i.project_id, i.type, u.email, u.name`,
         [invoiceId, String(session.payment_intent ?? "")]
       );
 
       if (inv.length) {
-        const { project_id, type } = inv[0];
-        await query(`insert into events (type, payload) values ('invoice.paid', $1)`, [
-          JSON.stringify({ invoiceId, type, project_id }),
-        ]);
+        const { project_id, type, email, name } = inv[0];
+        await dispatch("invoice.paid", { invoiceId, type, project_id, email, name: name || "there" });
 
-        // Auto: deposit paid → activate project; balance paid → mark project completed-ready.
+        // Auto: deposit paid → activate project.
         if (type === "deposit") {
           await query(`update projects set status = 'active' where id = $1 and status = 'signed'`, [project_id]);
-        }
-        if (type === "balance" || type === "full") {
-          await query(`insert into events (type, payload) values ('project.balance_settled', $1)`, [
-            JSON.stringify({ project_id }),
-          ]);
+          await dispatch("project.activated", { project_id });
         }
       }
     }

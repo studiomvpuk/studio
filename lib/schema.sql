@@ -30,6 +30,35 @@ create table if not exists leads (
   created_at  timestamptz not null default now()
 );
 
+create table if not exists proposals (
+  id            uuid primary key default gen_random_uuid(),
+  lead_id       uuid references leads(id) on delete set null,
+  client_email  text not null,
+  client_name   text,
+  title         text not null,
+  scope         text,
+  price_cents   integer not null default 0,
+  payment_plan  text not null default 'deposit' check (payment_plan in ('full','deposit','milestones')),
+  deposit_pct   integer not null default 50,
+  status        text not null default 'draft' check (status in ('draft','sent','viewed','signed','declined')),
+  token         text unique not null,
+  viewed_at     timestamptz,
+  created_at    timestamptz not null default now()
+);
+create index if not exists proposals_token_idx on proposals (token);
+
+create table if not exists contracts (
+  id            uuid primary key default gen_random_uuid(),
+  proposal_id   uuid not null references proposals(id) on delete cascade,
+  project_id    uuid,
+  signer_name   text not null,
+  signer_email  text not null,
+  signature     text not null,
+  signer_ip     text,
+  signer_agent  text,
+  signed_at     timestamptz not null default now()
+);
+
 create table if not exists projects (
   id            uuid primary key default gen_random_uuid(),
   client_id     uuid references users(id) on delete set null,

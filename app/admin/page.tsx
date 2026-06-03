@@ -58,8 +58,8 @@ export default async function AdminPage() {
             <h1>Dashboard</h1>
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
               <span className={`badge ${data.live ? "b-ok" : "b-mute"}`}>{data.live ? "Live data" : "Demo data"}</span>
-              <button className="btn-o btn">New proposal</button>
-              <button className="btn">+ New project</button>
+              <Link href="/admin/new-proposal" className="btn-o btn" style={{ textDecoration: "none" }}>New proposal</Link>
+              <Link href="/admin/new-proposal" className="btn" style={{ textDecoration: "none" }}>+ New project</Link>
             </div>
           </div>
 

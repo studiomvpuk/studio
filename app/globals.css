@@ -272,3 +272,32 @@ a { color: inherit; text-decoration: none; }
 .auth-msg a { color: #fff; text-decoration: underline; }
 .auth-foot { margin-top: 26px; font-size: .82rem; color: var(--grey); }
 .auth-foot a { color: var(--grey); border-bottom: 1px solid var(--line); }
+
+/* ───────── PROPOSAL / SIGN (.doc-page) ───────── */
+.doc-page {
+  --ink: #0a0a0c; --grey: #5b5b63; --grey-2: #9a9aa2; --hair: #e7e7e6; --paper: #f7f7f6;
+  background: #fff; color: var(--ink); font-weight: 300; min-height: 100vh; line-height: 1.7;
+}
+.doc-page .doc-wrap { max-width: 760px; margin: 0 auto; padding: 70px 28px 120px; }
+.doc-page .tag { display: inline-block; font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--grey); border: 1px solid var(--hair); border-radius: 40px; padding: 7px 15px; margin-bottom: 22px; }
+.doc-page h1 { font-family: var(--display); font-weight: 400; font-size: clamp(2.2rem, 5vw, 3.4rem); letter-spacing: -.02em; margin-bottom: 10px; }
+.doc-page .who { color: var(--grey); margin-bottom: 36px; }
+.doc-page .panel { border: 1px solid var(--hair); border-radius: 16px; padding: 28px 30px; margin-bottom: 20px; }
+.doc-page .panel h3 { font-size: .76rem; letter-spacing: .12em; text-transform: uppercase; color: var(--grey-2); font-weight: 600; margin-bottom: 14px; }
+.doc-page .panel p { color: #2c2c33; white-space: pre-wrap; }
+.doc-page .figs { display: flex; flex-wrap: wrap; gap: 26px; }
+.doc-page .fig .k { font-size: .78rem; color: var(--grey); }
+.doc-page .fig .v { font-family: var(--display); font-size: 1.8rem; }
+.doc-page .terms { font-size: .94rem; color: #2c2c33; }
+.doc-page .sign-box { border: 1px solid var(--ink); border-radius: 16px; padding: 28px 30px; }
+.doc-page .sign-box label { display: block; font-size: .74rem; letter-spacing: .06em; text-transform: uppercase; color: var(--grey-2); font-weight: 600; margin: 12px 0 8px; }
+.doc-page .sign-box input { width: 100%; border: 1px solid var(--hair); border-radius: 11px; padding: 13px 15px; font-family: var(--body); font-size: 1rem; outline: none; }
+.doc-page .sign-box input.sig { font-family: var(--display); font-size: 1.6rem; font-style: italic; }
+.doc-page .sign-box input:focus { border-color: var(--ink); }
+.doc-page .sign-box .btn { margin-top: 18px; width: 100%; background: var(--ink); color: #fff; border: none; border-radius: 11px; padding: 15px; font-family: var(--body); font-weight: 600; font-size: .98rem; cursor: pointer; transition: .2s; }
+.doc-page .sign-box .btn:hover { opacity: .88; }
+.doc-page .sign-box .btn:disabled { opacity: .5; cursor: default; }
+.doc-page .legal { font-size: .8rem; color: var(--grey-2); margin-top: 14px; line-height: 1.6; }
+.doc-page .ok { text-align: center; padding: 40px 0; }
+.doc-page .ok .big { font-family: var(--display); font-size: 2.4rem; margin: 10px 0; }
+.doc-page .err { color: #c0392b; font-size: .9rem; margin-top: 10px; }
