@@ -2,15 +2,27 @@
 
 import { useState } from "react";
 
-const TOTAL = 6000;
-const fmt = (n: number) => "£" + n.toLocaleString();
+const fmt = (n: number) => "£" + n.toLocaleString("en-GB");
 
 type Plan = "full" | "deposit" | "milestones";
 
-export default function PaymentTerms({ projectId }: { projectId?: string }) {
+export default function PaymentTerms({
+  projectId,
+  projectName,
+  totalCents = 0,
+  depositPct = 50,
+  gateLaunch = true,
+}: {
+  projectId?: string;
+  projectName?: string;
+  totalCents?: number;
+  depositPct?: number;
+  gateLaunch?: boolean;
+}) {
+  const TOTAL = Math.round(totalCents / 100);
   const [plan, setPlan] = useState<Plan>("deposit");
-  const [split, setSplit] = useState(50);
-  const [gate, setGate] = useState(true);
+  const [split, setSplit] = useState(depositPct);
+  const [gate, setGate] = useState(gateLaunch);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState("");
 
@@ -50,7 +62,7 @@ export default function PaymentTerms({ projectId }: { projectId?: string }) {
 
   return (
     <div className="card pt-card">
-      <div className="ct">Payment terms · Mira</div>
+      <div className="ct">Payment terms{projectName ? ` · ${projectName}` : ""}</div>
       <span className="lbl">Plan</span>
       <div className="seg">
         <button className={plan === "full" ? "on" : ""} onClick={() => setPlan("full")}>Full upfront</button>
