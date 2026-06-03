@@ -84,6 +84,38 @@ export async function consumeMagicToken(token: string): Promise<Session | null> 
   return { userId: u.id, email: u.email, role: u.role, name: u.name };
 }
 
+/** Find-or-create a user from a verified OAuth identity (e.g. Google). */
+export async function upsertOAuthUser(email: string, name: string | null): Promise<Session> {
+  const normalized = email.toLowerCase().trim();
+  const adminEmail = (process.env.ADMIN_EMAIL || "officialstudiomvp@gmail.com").toLowerCase().trim();
+
+  let users = await query<{ id: string; email: string; role: Role; name: string | null }>(
+    `select id, email, role, name from users where email = $1`,
+    [normalized]
+  );
+
+  if (!users.length) {
+    const role: Role = normalized === adminEmail ? "admin" : "prospect";
+    users = await query(
+      `insert into users (email, role, name) values ($1, $2, $3) returning id, email, role, name`,
+      [normalized, role, name]
+    );
+  } else {
+    // Backfill the name from Google, and make sure the studio owner is always admin.
+    if (name && !users[0].name) {
+      await query(`update users set name = $1 where id = $2`, [name, users[0].id]);
+      users[0].name = name;
+    }
+    if (normalized === adminEmail && users[0].role !== "admin") {
+      await query(`update users set role = 'admin' where id = $1`, [users[0].id]);
+      users[0].role = "admin";
+    }
+  }
+
+  const u = users[0];
+  return { userId: u.id, email: u.email, role: u.role, name: u.name };
+}
+
 /* ── magic-link email (Resend if configured, else dev log) ── */
 export async function sendMagicLink(email: string, link: string): Promise<{ devLink?: string }> {
   if (process.env.RESEND_API_KEY) {

@@ -379,6 +379,19 @@ a { color: inherit; text-decoration: none; }
 .auth-msg a { color: #fff; text-decoration: underline; }
 .auth-foot { margin-top: 26px; font-size: .82rem; color: var(--grey); }
 .auth-foot a { color: var(--grey); border-bottom: 1px solid var(--line); }
+.auth-card .g-btn {
+  display: flex; align-items: center; justify-content: center; gap: 11px;
+  background: #fff; color: #1f1f1f; border: none; border-radius: 12px; padding: 14px;
+  font-family: var(--body); font-weight: 600; font-size: .98rem; text-decoration: none; transition: .25s;
+}
+.auth-card .g-btn:hover { transform: translateY(-1px); }
+.auth-card .g-btn svg { width: 18px; height: 18px; flex: none; }
+.auth-or { display: flex; align-items: center; gap: 12px; color: var(--grey); font-size: .78rem; margin: 20px 0; }
+.auth-or::before, .auth-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.auth-error {
+  background: rgba(201, 138, 22, .12); border: 1px solid rgba(201, 138, 22, .3); color: #e6b450;
+  border-radius: 10px; padding: 11px 14px; font-size: .86rem; line-height: 1.5; margin-bottom: 20px;
+}
 
 /* ───────── PROPOSAL / SIGN (.doc-page) ───────── */
 .doc-page {
