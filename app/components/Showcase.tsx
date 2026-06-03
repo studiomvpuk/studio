@@ -4,34 +4,33 @@ import { useState } from "react";
 import Link from "next/link";
 import { projects } from "../(site)/projects";
 
+// Selected-work showcase. It shows ONLY real screenshots from public/work/<slug>.
+// Projects that don't have a screenshot yet are skipped here (they still appear
+// on the full /work list).
+const shown = projects.filter((p) => p.shots.length > 0);
+
 export default function Showcase() {
   const [active, setActive] = useState(0);
-  const [prev, setPrev] = useState(0);
+  const select = (i: number) => setActive(i);
 
-  const select = (i: number) => {
-    if (i === active) return;
-    setPrev(active);
-    setActive(i);
-  };
-
-  const p = projects[active];
+  const p = shown[active];
+  const back = p.shots.length > 1 ? p.shots[0] : null;
+  const front = p.shots[p.shots.length - 1];
 
   return (
     <div className="ss-stage">
-      {/* cross-fading background — previous layer underneath, new layer fades in on top */}
-      <div className="ss-bg under" aria-hidden>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={projects[prev].bg} alt="" />
-      </div>
-      <div className="ss-bg over" key={`bg-${active}`} aria-hidden>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={p.bg} alt="" />
-      </div>
+      {/* Atmospheric backgrounds removed — they were Unsplash stock, not the real
+          sites. The stage now sits on a flat dark canvas so only public/work
+          screenshots show. (Old cross-fading background kept here, commented out,
+          in case we later want a blurred hero behind the stage.)
+      <div className="ss-bg under" aria-hidden><img src={shown[prev].bg} alt="" /></div>
+      <div className="ss-bg over" key={`bg-${active}`} aria-hidden><img src={p.bg} alt="" /></div>
+      */}
 
       {/* project list — pinned to the far-left viewport edge.
           Hover previews the project; clicking opens its case study. */}
       <div className="ss-list">
-        {projects.map((proj, i) => (
+        {shown.map((proj, i) => (
           <Link
             key={proj.slug}
             href={`/work/${proj.slug}`}
@@ -48,13 +47,15 @@ export default function Showcase() {
       {/* description — slides down from the top */}
       <p className="ss-desc" key={`desc-${active}`}>{p.desc}</p>
 
-      {/* product shot — two iterations slide in from the right, staggered (second on top).
-          The whole stack links into the case study. */}
+      {/* product — real screenshots from public/work; two stacked when the project
+          has a pair, a single framed card when it only has one. */}
       <Link className="ss-product" href={`/work/${p.slug}`} key={`prod-${active}`} aria-label={`Open ${p.name} case study`}>
+        {back ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className="shot back" src={back} alt={`${p.name} screenshot`} />
+        ) : null}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="shot back" src={p.shots[0]} alt={`${p.name} product`} />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="shot front" src={p.shots[1]} alt={`${p.name} product`} />
+        <img className={`shot front${back ? "" : " solo"}`} src={front} alt={`${p.name} screenshot`} />
       </Link>
 
       {/* big name + discipline — vertically centred in the mid-left (MetaLab style) */}

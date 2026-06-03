@@ -23,10 +23,12 @@ export type Project = {
   desc: string;
   /** Discipline label on the showcase stage, e.g. "Web · Brand". */
   disc: string;
-  /** Showcase background image (atmospheric). */
+  /** Showcase background image (atmospheric). Currently unused — the showcase
+   *  renders on a flat dark canvas so only real screenshots show. */
   bg: string;
-  /** Two product mockups for the showcase stage. */
-  shots: [string, string];
+  /** Real screenshots from public/work/<slug> for the showcase stage.
+   *  1 → a single framed card, 2 → a stacked pair. Stock is never used here. */
+  shots: string[];
   /** Detail-page header fields (MetaLab-style). */
   projectType: string;
   stage: string;
@@ -69,7 +71,8 @@ export const projects: Project[] = [
     desc: "U.S. logistics infrastructure for international sellers — hold inventory stateside and ship every order locally, no U.S. business required.",
     disc: "Product Design · Web App",
     bg: U("1556742049-0cfed4f6a45d"),
-    shots: [local("/work/usa-errands/hero.jpg"), P("1521791136064-7986c2920216")],
+    // only a hero screenshot exists so far; add shot-1.jpg/shot-2.jpg for a stacked pair
+    shots: [local("/work/usa-errands/hero.jpg")], // was [..., P("1521791136064-7986c2920216")]
     projectType: "Full Build",
     stage: "Startup",
     deliverables: "Product Design, Web App, Engineering",
@@ -129,7 +132,8 @@ export const projects: Project[] = [
     desc: "Probability-driven sports-betting intelligence — ranked picks, transparent reasoning and multi-match strategy building.",
     disc: "Product Design · Web App",
     bg: U("1460925895917-afdab827c52f"),
-    shots: [local("/work/oraql/hero.jpg"), P("1551288049-bebda4e38f71")],
+    // only a hero screenshot exists so far; add shot-1.jpg/shot-2.jpg for a stacked pair
+    shots: [local("/work/oraql/hero.jpg")], // was [..., P("1551288049-bebda4e38f71")]
     projectType: "Full Build",
     stage: "Startup",
     deliverables: "Product Design, Web App, Engineering",
@@ -189,7 +193,8 @@ export const projects: Project[] = [
     desc: "A boutique hair & beauty salon by Nesrin — refined craft in a calm, luxurious New Islington setting.",
     disc: "Web · Brand",
     bg: U("1633681926022-84c23e8cb2d6"),
-    shots: [local("/work/tiara-shades/hero.jpg"), P("1502323777036-f29e3972d82f")],
+    // only a hero screenshot exists so far; add shot-1.jpg/shot-2.jpg for a stacked pair
+    shots: [local("/work/tiara-shades/hero.jpg")], // was [..., P("1502323777036-f29e3972d82f")]
     projectType: "Brand & Web",
     stage: "Launch",
     deliverables: "Brand, Web Design",
@@ -209,7 +214,9 @@ export const projects: Project[] = [
     desc: "Manchester's home of colour & glamour — hair, makeup, brows, nails, facials and more, in one Prestwich studio.",
     disc: "Web · Brand",
     bg: U("1500917293891-ef795e70e1f6"),
-    shots: [P("1560869713-7d0a29430803"), P("1604654894610-df63bc536371")],
+    // no screenshots in public/work/the-colour-studio yet — add hero.jpg (+ shot-1/shot-2)
+    // and it will appear in the showcase. Was [P("1560869713-..."), P("1604654894610-...")].
+    shots: [],
     projectType: "Brand & Web",
     stage: "Established",
     deliverables: "Brand, Web Design",
