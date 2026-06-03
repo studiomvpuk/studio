@@ -81,6 +81,11 @@
 .client-app .item .t small { display: block; color: var(--grey-2); font-size: 0.78rem; }
 .client-app .link { font-size: 0.86rem; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--ink); padding-bottom: 2px; cursor: pointer; }
 
+.client-app .cl-empty { padding: 30px 24px; text-align: center; color: var(--grey-2); font-size: 0.95rem; line-height: 1.55; border: 1px dashed var(--hair); border-radius: 14px; }
+.client-app .cl-foot { margin-top: 40px; padding-top: 22px; border-top: 1px solid var(--hair); display: flex; gap: 8px; align-items: center; }
+.client-app .cl-foot .badge { text-decoration: none; }
+.client-app .tl .ph .badge { margin-left: auto; }
+
 @media (max-width: 900px) {
   .client-app .app { grid-template-columns: 1fr; }
   .client-app .side { position: static; height: auto; flex-direction: row; align-items: center; justify-content: space-between; padding: 16px 20px; }

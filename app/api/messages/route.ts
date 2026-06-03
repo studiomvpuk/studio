@@ -1,6 +1,28 @@
 import { NextResponse } from "next/server";
-import { dbConfigured, query } from "@/lib/db";
+import { dbConfigured, query, safeQuery } from "@/lib/db";
 import { getSession } from "@/lib/auth";
+
+const dayMonth = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+
+// Fetch a project's thread (auth-scoped).
+export async function GET(req: Request) {
+  const session = await getSession();
+  const projectId = new URL(req.url).searchParams.get("projectId") || "";
+  if (!dbConfigured || !session || !projectId) return NextResponse.json({ messages: [] });
+
+  // Clients can only read their own project's thread.
+  if (session.role === "client") {
+    const owns = await query<{ id: string }>(`select id from projects where id = $1 and client_id = $2`, [projectId, session.userId]);
+    if (!owns.length) return NextResponse.json({ messages: [] });
+  }
+
+  const rows = await safeQuery<{ author: string; body: string; created_at: string }>(
+    `select author, body, created_at from messages where project_id = $1 order by created_at asc limit 100`,
+    [projectId]
+  );
+  return NextResponse.json({ messages: rows.map((m) => ({ author: m.author, body: m.body, when: dayMonth(m.created_at) })) });
+}
 
 // Post a message to a project's thread.
 export async function POST(req: Request) {

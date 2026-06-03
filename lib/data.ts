@@ -243,49 +243,61 @@ export async function getEvents(): Promise<{ live: boolean; rows: { type: string
   };
 }
 
+export type ClientMessage = { author: string; body: string; when: string };
 export type ClientData = {
   live: boolean;
+  hasProject: boolean;
   projectId: string | null;
   project: string;
+  statusLabel: string;
   phaseLabel: string;
+  nextPhase: string | null;
   pct: number;
   phases: { name: string; state: "done" | "active" | "upcoming" }[];
   total: string;
   paid: string;
   outstanding: string;
+  paidPct: number;
   balanceInvoiceId: string | null;
+  invoices: { id: string; label: string; amount: string; status: string; badge: string }[];
+  documents: { label: string; meta: string; href: string | null }[];
   approvals: { id: string; item: string; status: "pending" | "approved" | "changes"; when: string }[];
-  messages: { author: string; body: string; mine: boolean }[];
+  messages: ClientMessage[];
 };
 
-export async function getClientData(clientId?: string): Promise<ClientData> {
-  if (!dbConfigured) return { ...demoClient, live: false };
+function emptyClient(live: boolean): ClientData {
+  return {
+    live, hasProject: false, projectId: null, project: "", statusLabel: "", phaseLabel: "",
+    nextPhase: null, pct: 0, phases: [], total: gbp(0), paid: gbp(0), outstanding: gbp(0),
+    paidPct: 0, balanceInvoiceId: null, invoices: [], documents: [], approvals: [], messages: [],
+  };
+}
 
-  const proj = await safeQuery<{ id: string; name: string; current_phase: string; total_cents: number; est_launch: string | null }>(
+export async function getClientData(clientId?: string): Promise<ClientData> {
+  const proj = await safeQuery<{ id: string; name: string; status: string; current_phase: string; total_cents: number; est_launch: string | null }>(
     clientId
-      ? `select id, name, current_phase, total_cents, est_launch from projects where client_id = $1 order by created_at desc limit 1`
-      : `select id, name, current_phase, total_cents, est_launch from projects order by created_at desc limit 1`,
+      ? `select id, name, status, current_phase, total_cents, est_launch from projects where client_id = $1 order by created_at desc limit 1`
+      : `select id, name, status, current_phase, total_cents, est_launch from projects order by created_at desc limit 1`,
     clientId ? [clientId] : []
   );
-  if (!proj.length) return { ...demoClient, live: dbConfigured };
+  if (!proj.length) return emptyClient(dbConfigured);
 
   const p = proj[0];
   const phaseRows = await safeQuery<{ name: string; status: "done" | "active" | "upcoming" }>(
-    `select name, status from phases where project_id = $1 order by ord`,
-    [p.id]
+    `select name, status from phases where project_id = $1 order by ord`, [p.id]
   );
   const phases = phaseRows.map((x) => ({ name: x.name, state: x.status }));
   const invoices = await safeQuery<{ id: string; amount_cents: number; type: string; status: string }>(
-    `select id, amount_cents, type, status from invoices where project_id = $1`,
-    [p.id]
+    `select id, amount_cents, type, status from invoices where project_id = $1 order by created_at`, [p.id]
   );
-
   const approvalRows = await safeQuery<{ id: string; item: string; status: "pending" | "approved" | "changes"; created_at: string }>(
-    `select id, item, status, created_at from approvals where project_id = $1 order by created_at desc`,
-    [p.id]
+    `select id, item, status, created_at from approvals where project_id = $1 order by created_at desc`, [p.id]
   );
-  const messageRows = await safeQuery<{ author: string; body: string }>(
-    `select author, body from messages where project_id = $1 order by created_at asc limit 30`,
+  const messageRows = await safeQuery<{ author: string; body: string; created_at: string }>(
+    `select author, body, created_at from messages where project_id = $1 order by created_at asc limit 50`, [p.id]
+  );
+  const docRows = await safeQuery<{ token: string; title: string; signed_at: string | null }>(
+    `select pr.token, pr.title, c.signed_at from contracts c join proposals pr on pr.id = c.proposal_id where c.project_id = $1 order by c.signed_at desc`,
     [p.id]
   );
 
@@ -293,48 +305,39 @@ export async function getClientData(clientId?: string): Promise<ClientData> {
   const dueBalance = invoices.find((i) => i.status === "due" && (i.type === "balance" || i.type === "full"));
   const done = phases.filter((x) => x.state === "done").length;
   const pct = phases.length ? Math.round((done / phases.length) * 100) : 0;
-  const rel = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  const paidPct = p.total_cents > 0 ? Math.round((paidCents / p.total_cents) * 100) : 0;
+  const nextPhase = phases.find((x) => x.state === "active")?.name || phases.find((x) => x.state === "upcoming")?.name || null;
+
+  const invLabel: Record<string, string> = { deposit: "Deposit invoice", balance: "Balance invoice", full: "Full payment" };
+  const documents = docRows.flatMap((d) => {
+    const out: { label: string; meta: string; href: string | null }[] = [];
+    if (d.signed_at) out.push({ label: "Signed agreement", meta: `Signed ${dayMonthYear(d.signed_at)}`, href: `/proposal/${d.token}` });
+    out.push({ label: "Project proposal", meta: d.title, href: `/proposal/${d.token}` });
+    return out;
+  });
 
   return {
-    live: true,
+    live: dbConfigured,
+    hasProject: true,
     projectId: p.id,
     project: p.name,
-    phaseLabel: `${p.current_phase}${p.est_launch ? ` · Estimated launch ${new Date(p.est_launch).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : ""}`,
+    statusLabel: label(p.status),
+    phaseLabel: `${p.current_phase}${p.est_launch ? ` · Estimated launch ${dayMonthYear(p.est_launch)}` : ""}`,
+    nextPhase,
     pct,
-    phases: phases.length ? phases : demoClient.phases,
+    phases,
     total: gbp(p.total_cents),
     paid: gbp(paidCents),
     outstanding: gbp(p.total_cents - paidCents),
+    paidPct,
     balanceInvoiceId: dueBalance?.id ?? null,
-    approvals: approvalRows.map((a) => ({ id: a.id, item: a.item, status: a.status, when: rel(a.created_at) })),
-    messages: messageRows.map((m) => ({ author: m.author, body: m.body, mine: m.author === "client" })),
+    invoices: invoices.map((i) => ({
+      id: i.id, label: invLabel[i.type] || i.type, amount: gbp(i.amount_cents),
+      status: label(i.status), badge: i.status === "paid" ? "b-ok" : i.status === "due" ? "b-warn" : "b-mute",
+    })),
+    documents,
+    approvals: approvalRows.map((a) => ({ id: a.id, item: a.item, status: a.status, when: dayMonth(a.created_at) })),
+    messages: messageRows.map((m) => ({ author: m.author, body: m.body, when: dayMonth(m.created_at) })),
   };
 }
 
-/* ── client portal demo fallback (used only when no DATABASE_URL) ── */
-const demoClient: ClientData = {
-  live: false,
-  projectId: null,
-  project: "NaijaEats — Food delivery app",
-  phaseLabel: "Phase 3 of 5 · Estimated launch 12 Aug 2026",
-  pct: 62,
-  phases: [
-    { name: "Discovery & brief", state: "done" },
-    { name: "Design", state: "done" },
-    { name: "Build", state: "active" },
-    { name: "Testing & QA", state: "upcoming" },
-    { name: "Launch & handover", state: "upcoming" },
-  ],
-  total: "£8,000",
-  paid: "£4,000",
-  outstanding: "£4,000",
-  balanceInvoiceId: null,
-  approvals: [
-    { id: "demo-1", item: "Checkout flow — Build preview", status: "pending", when: "2h ago" },
-    { id: "demo-2", item: "Home screen design", status: "approved", when: "4 Jun" },
-  ],
-  messages: [
-    { author: "team", body: "Build preview is up — take a look at the checkout when you get a sec.", mine: false },
-    { author: "client", body: "Looks great, approving the home screen now.", mine: true },
-  ],
-};

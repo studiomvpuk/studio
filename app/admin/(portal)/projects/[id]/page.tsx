@@ -4,6 +4,7 @@ import { getProjectDetail } from "@/lib/data";
 import AdminTop from "../../../AdminTop";
 import PaymentTerms from "../../../PaymentTerms";
 import ProjectActions from "../../../ProjectActions";
+import MessageThread from "@/app/components/MessageThread";
 
 export const metadata = { title: "Project — StudioMVP Admin" };
 
@@ -93,21 +94,14 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
             )}
           </div>
 
-          {/* MESSAGES */}
+          {/* MESSAGES (live thread) */}
           <div className="card">
             <div className="ct">Messages <span className="badge b-mute">{p.messages.length}</span></div>
-            {p.messages.length ? (
-              <div className="msg-list">
-                {p.messages.map((m, i) => (
-                  <div key={i} className={`msg ${m.mine ? "msg-mine" : ""}`}>
-                    <div className="msg-meta">{m.mine ? "Team" : "Client"} · {m.when}</div>
-                    <div className="msg-body">{m.body}</div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="empty">No messages yet.</div>
-            )}
+            <MessageThread
+              projectId={p.id}
+              initial={p.messages.map((m) => ({ author: m.author, body: m.body, when: m.when }))}
+              me="team"
+            />
           </div>
         </div>
 

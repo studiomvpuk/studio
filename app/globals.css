@@ -450,3 +450,16 @@ a { color: inherit; text-decoration: none; }
   .mvp .imp-grid { gap: 30px 18px; }
   .mvp main > section:first-child { padding-top: 120px; }
 }
+
+/* ───────── Shared message thread (client + admin portals) ───────── */
+.mt { display: flex; flex-direction: column; }
+.mt-scroll { display: flex; flex-direction: column; gap: 10px; max-height: 360px; overflow-y: auto; padding-right: 4px; }
+.mt-msg { background: #f6f6f5; border: 1px solid #e7e7e6; border-radius: 12px; padding: 10px 13px; max-width: 88%; align-self: flex-start; }
+.mt-mine { background: #0a0a0c; color: #fff; border-color: #0a0a0c; align-self: flex-end; }
+.mt-meta { font-size: 0.7rem; color: #9a9aa2; margin-bottom: 3px; }
+.mt-mine .mt-meta { color: rgba(255, 255, 255, 0.6); }
+.mt-body { font-size: 0.9rem; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
+.mt-empty { color: #9a9aa2; font-size: 0.9rem; padding: 20px 4px; text-align: center; }
+.mt-form { display: flex; gap: 8px; margin-top: 14px; }
+.mt-form input { flex: 1; border: 1px solid #e7e7e6; border-radius: 10px; padding: 11px 13px; font-family: var(--body); font-size: 0.92rem; outline: none; transition: 0.2s; }
+.mt-form input:focus { border-color: #0a0a0c; }
