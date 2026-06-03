@@ -20,7 +20,7 @@ export default async function ClientOverview() {
 
       <div className="grid">
         {!data.hasProject ? (
-          <NoProject />
+          <NoProject name={session?.name || ""} email={session?.email || ""} />
         ) : (
           <>
             {/* OVERVIEW HERO */}

@@ -15,7 +15,7 @@ export default async function DocumentsPage() {
       <ClientTop title="Documents" />
       <div className="grid">
         {!data.hasProject ? (
-          <NoProject note="No documents yet. Your signed agreement and proposal will appear here." />
+          <NoProject note="No documents yet. Your signed agreement and proposal will appear here." name={session?.name || ""} email={session?.email || ""} />
         ) : (
           <div className="card" style={{ gridColumn: "1 / -1" }}>
             <div className="ch"><span className="ct">Your documents</span><span className="badge b-mute">{data.documents.length}</span></div>

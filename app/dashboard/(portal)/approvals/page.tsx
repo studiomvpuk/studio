@@ -16,7 +16,7 @@ export default async function ApprovalsPage() {
       <ClientTop title="Approvals" sub={data.hasProject ? `${pending} awaiting your review` : undefined} />
       <div className="grid">
         {!data.hasProject ? (
-          <NoProject note="No approvals yet. When the team shares work for sign-off, it lands here." />
+          <NoProject note="No approvals yet. When the team shares work for sign-off, it lands here." name={session?.name || ""} email={session?.email || ""} />
         ) : (
           <div style={{ gridColumn: "1 / -1" }}>
             <Approvals initial={data.approvals} />

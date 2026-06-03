@@ -15,7 +15,7 @@ export default async function MessagesPage() {
       <ClientTop title="Messages" sub={data.hasProject ? `Project thread · ${data.project}` : undefined} />
       <div className="grid">
         {!data.hasProject ? (
-          <NoProject note="Messaging opens once your project is set up. You'll be able to chat with the team right here." />
+          <NoProject note="Messaging opens once your project is set up. You'll be able to chat with the team right here." name={session?.name || ""} email={session?.email || ""} />
         ) : (
           <div className="card" style={{ gridColumn: "1 / -1" }}>
             <div className="ch"><span className="ct">Project thread</span><span className="badge b-info">Live</span></div>

@@ -15,7 +15,7 @@ export default async function PaymentsPage() {
       <ClientTop title="Payments" sub={data.hasProject ? `${data.paid} paid of ${data.total}` : undefined} />
       <div className="grid">
         {!data.hasProject ? (
-          <NoProject note="No invoices yet. Your deposit and balance invoices appear here once your proposal is signed." />
+          <NoProject note="No invoices yet. Your deposit and balance invoices appear here once your proposal is signed." name={session?.name || ""} email={session?.email || ""} />
         ) : (
           <>
             <div className="card">

@@ -17,7 +17,7 @@ export default async function TimelinePage() {
       <ClientTop title="Timeline" sub={data.hasProject ? data.phaseLabel : undefined} />
       <div className="grid">
         {!data.hasProject ? (
-          <NoProject />
+          <NoProject name={session?.name || ""} email={session?.email || ""} />
         ) : (
           <div className="card" style={{ gridColumn: "1 / -1" }}>
             <div className="ch"><span className="ct">Project phases</span><span className="badge b-mute">{data.pct}% complete</span></div>
