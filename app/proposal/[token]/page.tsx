@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { dbConfigured, query, safeQuery } from "@/lib/db";
+import { getSession } from "@/lib/auth";
 import SignForm from "./SignForm";
 
 export const metadata = { title: "Your proposal — StudioMVP" };
@@ -38,6 +39,7 @@ export default async function ProposalPage({ params }: { params: Promise<{ token
     : `${gbp(deposit)} deposit (${p.deposit_pct}%) on signing, ${gbp(p.price_cents - deposit)} balance before launch`;
 
   const signed = p.status === "signed";
+  const session = await getSession();
 
   return (
     <div className="doc-page">
@@ -71,7 +73,13 @@ export default async function ProposalPage({ params }: { params: Promise<{ token
         </div>
 
         {signed ? (
-          <div className="ok"><div className="tag">Signed</div><div className="big">This proposal has been signed.</div><a className="btn" href="/login" style={{ display: "inline-block", maxWidth: 260, margin: "8px auto 0" }}>Sign in to your dashboard →</a></div>
+          <div className="ok">
+            <div className="tag">Signed</div>
+            <div className="big">This proposal has been signed.</div>
+            <a className="btn" href={session ? "/dashboard" : "/login"} style={{ display: "inline-block", maxWidth: 280, margin: "8px auto 0" }}>
+              {session ? "Back to your dashboard →" : "Sign in to your dashboard →"}
+            </a>
+          </div>
         ) : (
           <SignForm token={token} clientName={p.client_name || ""} />
         )}
