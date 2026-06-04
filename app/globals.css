@@ -56,7 +56,10 @@ a { color: inherit; text-decoration: none; }
 .mvp nav.light .icon-pill { background: #ececec; border-color: rgba(0, 0, 0, 0.08); }
 .mvp nav.light .icon-pill svg { stroke: var(--ink); }
 
-.mvp .hero { min-height: 100vh; display: flex; align-items: center; padding-top: 96px; padding-bottom: 120px; position: relative; }
+.mvp .hero { min-height: 100vh; display: flex; align-items: center; padding-top: 96px; padding-bottom: 120px; position: relative; overflow: hidden; }
+.mvp .hero-particles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.mvp .hero > .wrap { position: relative; z-index: 2; }
+.mvp .hero .hcue { z-index: 2; }
 .mvp .avail {
   display: inline-flex; align-items: center; gap: 9px; font-size: 0.78rem; color: var(--grey-2);
   border: 1px solid var(--line); border-radius: 40px; padding: 8px 16px; margin-bottom: 34px;

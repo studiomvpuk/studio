@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import Image from "next/image";
 
 export const metadata: Metadata = { title: "About — StudioMVP" };
 
@@ -8,7 +9,9 @@ export default function AboutPage() {
     <>
       <section style={{ paddingTop: 150 }}>
         <div className="wrap founder-grid founder">
-          <div className="photo reveal"><span>Add founder photo</span></div>
+          <div className="photo reveal"><span style={{ borderRadius: "50%", overflow: "hidden" }}>
+            <Image src="/tolulope.jpg" alt="Tolulope Olonibua" width={100} height={100} />
+            </span></div>
           <div className="reveal">
             <div className="eyebrow">The founder</div>
             <h2>Built by a founder who&rsquo;s shipped — not a sales team.</h2>
@@ -21,7 +24,7 @@ export default function AboutPage() {
               So you work directly with someone who has lived the founder journey,
               understands what investors look for, and builds your product like it&rsquo;s his own.
             </p>
-            <div className="creds">BSc Mathematics · ex-MTN Group · Founder, LetsGoHalf</div>
+            <div className="creds">BSc Mathematics · Founder, LetsGoHalf</div>
             <div className="sig">— Tolulope Olonibua</div>
           </div>
         </div>
