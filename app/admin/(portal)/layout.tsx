@@ -16,9 +16,8 @@ export default async function PortalLayout({ children }: { children: React.React
         <div className="main">
           {children}
           <div className="admin-foot">
-            <Link href="/" className="badge b-mute">← Site</Link>
+            <Link href="/" className="badge b-mute">← studiomvp.co.uk</Link>
             <Link href="/dashboard" className="badge b-mute">Client view</Link>
-            <Link href="/spec" className="badge b-mute">Spec</Link>
             {session ? (
               <form action="/api/auth/logout" method="post" style={{ marginLeft: "auto" }}>
                 <button className="btn-o btn" type="submit">Sign out</button>

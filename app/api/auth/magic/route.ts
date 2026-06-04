@@ -23,6 +23,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Enter a valid email." }, { status: 400 });
   }
 
+  // In production we can't deliver the link without email configured — don't
+  // pretend to send. Point people to Google sign-in instead.
+  if (process.env.NODE_ENV === "production" && !process.env.RESEND_API_KEY) {
+    return NextResponse.json({ error: "Email sign-in isn't available right now — please continue with Google." }, { status: 503 });
+  }
+
   const token = await createMagicToken(email);
   const base = process.env.NEXT_PUBLIC_BASE_URL || new URL(req.url).origin;
   const link = `${base}/api/auth/callback?token=${token}`;

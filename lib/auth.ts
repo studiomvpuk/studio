@@ -142,5 +142,8 @@ export async function sendMagicLink(email: string, link: string): Promise<{ devL
     return {};
   }
   console.log(`\n🔗 Magic link for ${email}:\n${link}\n`);
-  return { devLink: link };
+  // Only ever hand the link back to the browser in local dev. In production
+  // (where email may be unconfigured) this must NOT leak, or anyone could sign
+  // in as anyone — the link is logged server-side only.
+  return process.env.NODE_ENV === "production" ? {} : { devLink: link };
 }
