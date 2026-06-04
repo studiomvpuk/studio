@@ -27,6 +27,13 @@
 .client-app .side .who .nm { font-size: 0.88rem; color: #fff; }
 .client-app .side .who .em { font-size: 0.74rem; color: var(--grey-2); }
 
+/* mobile drawer controls (hidden on desktop) */
+.client-app .side-toggle { display: none; position: fixed; top: 14px; left: 14px; z-index: 90; width: 46px; height: 46px; border-radius: 12px; border: 1px solid var(--hair); background: #fff; cursor: pointer; align-items: center; justify-content: center; flex-direction: column; gap: 4px; box-shadow: 0 8px 24px -10px rgba(0, 0, 0, 0.35); }
+.client-app .side-toggle span { display: block; width: 18px; height: 2px; background: var(--ink); border-radius: 2px; }
+.client-app .side-scrim { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 75; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.client-app .side-scrim.show { opacity: 1; pointer-events: auto; }
+.client-app .side-close { display: none; }
+
 .client-app .main { padding: 34px 44px 80px; }
 .client-app .top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 34px; flex-wrap: wrap; gap: 18px; }
 .client-app .top h1 { font-family: var(--display); font-weight: 400; font-size: 2.4rem; letter-spacing: -0.01em; }
@@ -107,9 +114,19 @@
 
 @media (max-width: 900px) {
   .client-app .app { grid-template-columns: 1fr; }
-  .client-app .side { position: static; height: auto; flex-direction: row; align-items: center; justify-content: space-between; padding: 16px 20px; }
-  .client-app .side nav { display: none; }
-  .client-app .side .who { margin: 0; border: none; padding: 0; }
+  .client-app .side-toggle { display: flex; }
+  /* sidebar becomes an off-canvas slide-in drawer */
+  .client-app .side {
+    position: fixed; top: 0; left: 0; height: 100vh; width: min(84vw, 290px);
+    flex-direction: column; align-items: stretch; padding: 24px 20px;
+    transform: translateX(-100%); transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.25, 1);
+    z-index: 80; overflow-y: auto; box-shadow: 0 0 70px rgba(0, 0, 0, 0.5);
+  }
+  .client-app .side.open { transform: translateX(0); }
+  .client-app .side nav { display: flex; margin-top: 28px; }
+  .client-app .side .who { margin-top: auto; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 18px; }
+  .client-app .side .brand { position: relative; }
+  .client-app .side-close { display: block; position: absolute; top: -2px; right: 0; background: none; border: none; color: var(--grey-2); font-size: 1rem; line-height: 1; cursor: pointer; padding: 4px; }
   .client-app .grid { grid-template-columns: 1fr; }
-  .client-app .main { padding: 24px 20px 60px; }
+  .client-app .main { padding: 78px 20px 60px; }
 }
