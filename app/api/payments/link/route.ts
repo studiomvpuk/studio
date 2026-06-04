@@ -3,7 +3,7 @@ import { randomBytes } from "node:crypto";
 import { dbConfigured, query } from "@/lib/db";
 import { ensureSchema } from "@/lib/migrate";
 import { getSession } from "@/lib/auth";
-import { sendEmail, base } from "@/lib/email";
+import { sendEmail, renderEmail, base } from "@/lib/email";
 
 // Admin generates a shareable payment link for an arbitrary amount.
 export async function POST(req: Request) {
@@ -43,10 +43,14 @@ export async function POST(req: Request) {
     await sendEmail({
       to: clientEmail,
       subject: `Payment request from StudioMVP — ${amount}`,
-      html: `<p>Hi ${clientName || "there"},</p>
-             <p>Here's a secure link to pay <b>${amount}</b> for <b>${description}</b>:</p>
-             <p><a href="${url}">Pay ${amount} →</a></p>
-             <p>Paid securely by card via Stripe.</p><p>— StudioMVP</p>`,
+      html: renderEmail({
+        preheader: `Secure payment request — ${amount}`,
+        heading: "Payment request",
+        intro: `Hi ${clientName || "there"},`,
+        paragraphs: [`Here's a secure link to pay <strong>${amount}</strong> for <strong>${description}</strong>.`],
+        cta: { label: `Pay ${amount} →`, url },
+        footnote: "Paid securely by card via Stripe — no account needed.",
+      }),
     });
   }
 

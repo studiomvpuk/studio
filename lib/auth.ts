@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { createHash, randomBytes } from "node:crypto";
 import { SignJWT, jwtVerify } from "jose";
 import { query, safeQuery } from "./db";
+import { renderEmail } from "./email";
 
 export type Role = "prospect" | "client" | "admin";
 export type Session = { userId: string; email: string; role: Role; name: string | null };
@@ -129,7 +130,13 @@ export async function sendMagicLink(email: string, link: string): Promise<{ devL
         from: process.env.EMAIL_FROM || "StudioMVP <onboarding@resend.dev>",
         to: email,
         subject: "Your StudioMVP sign-in link",
-        html: `<p>Click to sign in to StudioMVP:</p><p><a href="${link}">${link}</a></p><p>This link expires in 30 minutes.</p>`,
+        html: renderEmail({
+          preheader: "Your secure sign-in link — expires in 30 minutes.",
+          heading: "Sign in to StudioMVP",
+          paragraphs: ["Click the button below to sign in to your portal. This link is just for you and expires in 30 minutes."],
+          cta: { label: "Sign in →", url: link },
+          footnote: "If you didn't request this, you can safely ignore this email — no one can sign in without the link.",
+        }),
       }),
     });
     return {};
