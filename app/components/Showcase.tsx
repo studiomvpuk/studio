@@ -38,8 +38,16 @@ export default function Showcase() {
         <Link className="ss-item all" href="/work">All work →</Link>
       </div>
 
-      {/* description — slides down from the top */}
-      <p className="ss-desc" key={`desc-${active}`}>{p.desc}</p>
+      {/* centred text column — description above, project title below,
+          sitting between the list and the image (MetaLab placement) */}
+      <div className="ss-text" key={`text-${active}`}>
+        <p className="ss-desc">{p.desc}</p>
+        <Link className="ss-foot" href={`/work/${p.slug}`}>
+          <div className="ss-name">{p.name}</div>
+          <div className="ss-disc">{p.disc}</div>
+          <div className="ss-open">View case study →</div>
+        </Link>
+      </div>
 
       {/* device mockup of the project's screenshot — phone frame for mobile apps,
           browser window for web projects */}
@@ -60,13 +68,6 @@ export default function Showcase() {
           </span>
         </Link>
       )}
-
-      {/* big name + discipline — bottom-left (MetaLab style) */}
-      <Link className="ss-foot" href={`/work/${p.slug}`} key={`foot-${active}`}>
-        <div className="ss-name">{p.name}</div>
-        <div className="ss-disc">{p.disc}</div>
-        <div className="ss-open">View case study →</div>
-      </Link>
     </div>
   );
 }

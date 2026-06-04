@@ -25,8 +25,15 @@ a { color: inherit; text-decoration: none; }
 .mvp nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 90;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 22px 30px; transition: 0.4s;
+  padding: 22px 30px;
+  transition: padding .4s ease, background .4s ease, backdrop-filter .4s ease, border-color .4s ease;
+  border-bottom: 1px solid transparent;
+  animation: mvpNavIn .9s cubic-bezier(.16,1,.3,1) both;
 }
+@keyframes mvpNavIn { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+/* solid, blurred backdrop once the page is scrolled — stops content bleeding through */
+.mvp nav.scrolled { padding-top: 14px; padding-bottom: 14px; background: rgba(8,8,8,.72); backdrop-filter: blur(16px) saturate(1.3); border-bottom-color: var(--line-2); }
+.mvp nav.scrolled.light { background: rgba(244,243,239,.82); border-bottom-color: rgba(0,0,0,.07); }
 .mvp .pill {
   background: var(--panel-2); border: 1px solid var(--line-2); border-radius: 40px;
   padding: 10px 20px; font-size: 0.84rem; color: var(--white); cursor: pointer; transition: 0.3s;
@@ -86,6 +93,13 @@ a { color: inherit; text-decoration: none; }
 .mvp .hcue .ln { width: 1px; height: 34px; background: var(--line); position: relative; overflow: hidden; }
 .mvp .hcue .ln::after { content: ""; position: absolute; top: -50%; left: 0; width: 100%; height: 50%; background: #fff; animation: mvpDrop 1.8s ease-in-out infinite; }
 @keyframes mvpDrop { 0% { top: -50%; } 100% { top: 100%; } }
+
+/* hero — staged entrance on load (premium feel) */
+@keyframes mvpHeroUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+.mvp .hero .avail { animation: mvpHeroUp .9s cubic-bezier(.16,1,.3,1) both; }
+.mvp .hero h1 { animation: mvpHeroUp 1s cubic-bezier(.16,1,.3,1) .08s both; }
+.mvp .hero .sub { animation: mvpHeroUp 1s cubic-bezier(.16,1,.3,1) .2s both; }
+.mvp .hcue { animation: mvpHeroUp 1s ease 1s both; }
 
 .mvp section { padding: 130px 0; }
 .mvp .eyebrow { font-size: 0.76rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--grey); margin-bottom: 22px; }
@@ -165,16 +179,20 @@ a { color: inherit; text-decoration: none; }
 .mvp .ss-item.active { background: rgba(255,255,255,.95); color: #000; border-color: #fff; }
 .mvp .ss-item.all { margin-top: 6px; color: #fff; background: transparent; border-color: var(--line); }
 
-/* description — centred at the top, clearly visible; slides gently down (centering kept in the keyframe) */
+/* centred text column — sits between the list (left) and the image (right),
+   vertically centred. Description on top, project title below. */
+.mvp .ss-text {
+  position: absolute; left: clamp(168px, 17vw, 320px); top: 50%; transform: translateY(-50%);
+  z-index: 3; max-width: min(34vw, 400px);
+}
 .mvp .ss-desc {
-  position: absolute; top: 12vh; left: 50%;
-  max-width: 440px; text-align: center; color: rgba(255,255,255,.82); font-size: 1.02rem;
-  z-index: 3; padding: 0 20px; line-height: 1.65; text-shadow: 0 1px 24px rgba(0,0,0,.7);
-  animation: ssDescIn 1.1s cubic-bezier(.2,.8,.25,1) both;
+  color: rgba(255,255,255,.82); font-size: 1.04rem; line-height: 1.62; margin: 0 0 26px;
+  max-width: 380px; text-shadow: 0 1px 24px rgba(0,0,0,.55);
+  animation: ssDescIn 1s cubic-bezier(.2,.8,.25,1) both;
 }
 @keyframes ssDescIn {
-  from { opacity: 0; transform: translate(-50%, -24px); }
-  to   { opacity: 1; transform: translate(-50%, 0); }
+  from { opacity: 0; transform: translateY(-14px); }
+  to   { opacity: 1; transform: none; }
 }
 
 /* product — two large iterations, anchored to the bottom-right; rise in, staggered (second on top).
@@ -188,8 +206,8 @@ a { color: inherit; text-decoration: none; }
 /* one clean browser-window mockup of the project's screenshot — full image,
    shown at its real ~16:9 ratio so nothing is zoomed or cropped. */
 .mvp .ss-mock {
-  position: absolute; right: clamp(20px, 3vw, 64px); top: 50%; transform: translateY(-50%);
-  width: min(48vw, 680px); z-index: 2; display: block; cursor: pointer;
+  position: absolute; right: clamp(20px, 3vw, 60px); top: 50%; transform: translateY(-50%);
+  width: min(44vw, 600px); z-index: 2; display: block; cursor: pointer;
   border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: #0d0d0d;
   box-shadow: 0 60px 120px -45px rgba(0,0,0,.9);
   animation: ssMockIn 1s cubic-bezier(.2,.8,.25,1) both;
@@ -198,8 +216,9 @@ a { color: inherit; text-decoration: none; }
 .mvp .ss-mock:hover { box-shadow: 0 70px 140px -40px rgba(0,0,0,.96); }
 .mvp .ss-mock-bar { display: flex; align-items: center; gap: 7px; height: 36px; padding: 0 15px; background: #161616; border-bottom: 1px solid var(--line-2); }
 .mvp .ss-mock-bar .dot { width: 10px; height: 10px; border-radius: 50%; background: #3a3a3a; }
-.mvp .ss-mock-screen { display: block; aspect-ratio: 16 / 9; }
-.mvp .ss-mock-screen img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
+.mvp .ss-mock-screen { display: block; aspect-ratio: 16 / 9; overflow: hidden; }
+.mvp .ss-mock-screen img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; transition: transform .7s cubic-bezier(.16,1,.3,1); }
+.mvp .ss-mock:hover .ss-mock-screen img { transform: scale(1.035); }
 @keyframes ssMockIn { from { opacity: 0; transform: translate(0, calc(-50% + 18px)); } to { opacity: 1; transform: translateY(-50%); } }
 
 /* phone-frame mockup — for projects marked frame: "phone" (portrait screenshots) */
@@ -224,13 +243,9 @@ a { color: inherit; text-decoration: none; }
   to   { opacity: 1; transform: none; }
 }
 
-/* big name + discipline — vertically centred in the mid-left, between the list and
-   the centred description (MetaLab placement). The whole block links to the case study. */
-.mvp .ss-foot {
-  position: absolute; left: clamp(28px, 4.5vw, 80px); bottom: 8%; top: auto;
-  z-index: 3; max-width: 36%; display: block; text-decoration: none; color: inherit;
-}
-.mvp .ss-name { font-family: var(--display); font-size: clamp(2.6rem, 5.4vw, 5rem); line-height: .96; color: #fff; animation: ssUpIn 1.1s cubic-bezier(.2,.8,.25,1) .16s both; }
+/* project title + discipline — in-flow inside .ss-text (below the description) */
+.mvp .ss-foot { display: block; text-decoration: none; color: inherit; }
+.mvp .ss-name { font-family: var(--display); font-size: clamp(2.2rem, 4.4vw, 4rem); line-height: .98; color: #fff; animation: ssUpIn 1.1s cubic-bezier(.2,.8,.25,1) .16s both; }
 .mvp .ss-disc { margin-top: 14px; color: var(--grey-2); font-size: .96rem; animation: ssUpIn 1.1s cubic-bezier(.2,.8,.25,1) .32s both; }
 .mvp .ss-open {
   margin-top: 22px; font-size: .82rem; letter-spacing: .14em; text-transform: uppercase;
@@ -245,9 +260,12 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 1140px) {
   .mvp .ss-stage { min-height: auto; padding: 24px 0 32px; }
   .mvp .ss-list { position: static; transform: none; flex-direction: row; flex-wrap: wrap; gap: 8px; padding: 8px 20px 0; }
+  .mvp .ss-text {
+    position: static; left: auto; transform: none; max-width: 600px; margin: 26px auto 0;
+    padding: 0 20px; text-align: center;
+  }
   .mvp .ss-desc {
-    position: static; left: auto; transform: none; text-align: center;
-    max-width: 600px; margin: 26px auto 0; padding: 0 20px;
+    max-width: 600px; margin: 0 auto 22px;
     animation: ssFadeUp .9s cubic-bezier(.2,.8,.25,1) both;
   }
   .mvp .ss-mock {

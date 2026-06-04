@@ -54,7 +54,10 @@ export default function ClientEffects() {
         const r = s.getBoundingClientRect();
         if (r.top <= 64 && r.bottom > 64) light = s.classList.contains("light-sec");
       });
-      if (navEl) navEl.classList.toggle("light", light);
+      if (navEl) {
+        navEl.classList.toggle("light", light);
+        navEl.classList.toggle("scrolled", window.scrollY > 24);
+      }
     };
     navTheme();
     window.addEventListener("scroll", navTheme, { passive: true });
