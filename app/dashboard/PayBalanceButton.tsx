@@ -14,7 +14,7 @@ export default function PayBalanceButton({
 
   async function pay() {
     if (!invoiceId) {
-      setErr("Payments aren't configured yet.");
+      setErr("Nothing's due to pay right now.");
       return;
     }
     setBusy(true);

@@ -259,7 +259,8 @@ export type ClientData = {
   paid: string;
   outstanding: string;
   paidPct: number;
-  balanceInvoiceId: string | null;
+  dueInvoiceId: string | null;
+  dueLabel: string;
   invoices: { id: string; label: string; amount: string; status: string; badge: string }[];
   documents: { label: string; meta: string; href: string | null }[];
   approvals: { id: string; item: string; status: "pending" | "approved" | "changes"; when: string }[];
@@ -270,7 +271,7 @@ function emptyClient(live: boolean): ClientData {
   return {
     live, hasProject: false, projectId: null, project: "", statusLabel: "", phaseLabel: "",
     nextPhase: null, pct: 0, phases: [], total: gbp(0), paid: gbp(0), outstanding: gbp(0),
-    paidPct: 0, balanceInvoiceId: null, invoices: [], documents: [], approvals: [], messages: [],
+    paidPct: 0, dueInvoiceId: null, dueLabel: "", invoices: [], documents: [], approvals: [], messages: [],
   };
 }
 
@@ -303,7 +304,13 @@ export async function getClientData(clientId?: string): Promise<ClientData> {
   );
 
   const paidCents = invoices.filter((i) => i.status === "paid").reduce((s, i) => s + i.amount_cents, 0);
-  const dueBalance = invoices.find((i) => i.status === "due" && (i.type === "balance" || i.type === "full"));
+  // The next thing the client can pay = the first invoice that's actually due
+  // (deposit first, then balance/full once raised).
+  const nextDue = invoices.find((i) => i.status === "due");
+  const payWord: Record<string, string> = { deposit: "deposit", balance: "balance" };
+  const dueLabel = nextDue
+    ? `Pay ${payWord[nextDue.type] ? payWord[nextDue.type] + " · " : ""}${gbp(nextDue.amount_cents)} →`
+    : "";
   const done = phases.filter((x) => x.state === "done").length;
   const pct = phases.length ? Math.round((done / phases.length) * 100) : 0;
   const paidPct = p.total_cents > 0 ? Math.round((paidCents / p.total_cents) * 100) : 0;
@@ -331,7 +338,8 @@ export async function getClientData(clientId?: string): Promise<ClientData> {
     paid: gbp(paidCents),
     outstanding: gbp(p.total_cents - paidCents),
     paidPct,
-    balanceInvoiceId: dueBalance?.id ?? null,
+    dueInvoiceId: nextDue?.id ?? null,
+    dueLabel,
     invoices: invoices.map((i) => ({
       id: i.id, label: invLabel[i.type] || i.type, amount: gbp(i.amount_cents),
       status: label(i.status), badge: i.status === "paid" ? "b-ok" : i.status === "due" ? "b-warn" : "b-mute",

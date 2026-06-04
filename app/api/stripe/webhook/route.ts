@@ -61,9 +61,11 @@ export async function POST(req: Request) {
         const { project_id, type, email, name } = inv[0];
         await dispatch("invoice.paid", { invoiceId, type, project_id, email, name: name || "there" });
 
-        // Auto: deposit paid → activate project.
+        // Auto: deposit paid → activate project + raise the balance so the
+        // client can pay it next.
         if (type === "deposit") {
           await query(`update projects set status = 'active' where id = $1 and status = 'signed'`, [project_id]);
+          await query(`update invoices set status = 'due' where project_id = $1 and type = 'balance' and status = 'draft'`, [project_id]);
           await dispatch("project.activated", { project_id });
         }
       }

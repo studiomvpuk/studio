@@ -26,10 +26,12 @@ export default async function PaymentsPage() {
               <div className="pay-fig"><span className="k">Paid</span><span className="v">{data.paid}</span></div>
               <div className="pay-fig"><span className="k">Outstanding</span><span className="v">{data.outstanding}</span></div>
               <div className="pay-bar"><i style={{ width: `${data.paidPct}%` }}></i></div>
-              {data.paidPct < 100 ? (
-                <PayBalanceButton invoiceId={data.balanceInvoiceId} label={`Pay balance · ${data.outstanding} →`} />
-              ) : (
+              {data.dueInvoiceId ? (
+                <PayBalanceButton invoiceId={data.dueInvoiceId} label={data.dueLabel} />
+              ) : data.paidPct >= 100 ? (
                 <div className="cl-empty" style={{ padding: 16 }}>You&rsquo;re all paid up — thank you!</div>
+              ) : (
+                <div className="cl-empty" style={{ padding: 16 }}>Nothing to pay right now — your next invoice will appear here when it&rsquo;s raised.</div>
               )}
             </div>
 
