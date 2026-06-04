@@ -9,7 +9,7 @@ export default function AboutPage() {
     <>
       <section style={{ paddingTop: 150 }}>
         <div className="wrap founder-grid founder">
-          <div className="photo reveal"><span style={{ borderRadius: "50%", overflow: "hidden" }}>
+          <div className="photo reveal"><span style={{ borderRadius: "10%", overflow: "hidden" }}>
             <Image src="/tolulope.jpg" alt="Tolulope Olonibua" width={500} height={500} />
             </span></div>
           <div className="reveal">
