@@ -170,13 +170,18 @@ export async function getProjectDetail(id: string): Promise<ProjectDetail | null
 }
 
 /* ───────── CONTRACTS ───────── */
+export type AdminProposal = {
+  id: string; title: string; client: string; clientName: string; clientEmail: string;
+  scope: string; priceCents: number; price: string; paymentPlan: string; depositPct: number;
+  status: string; statusLabel: string; rawStatus: string; token: string; when: string;
+};
 export async function getContracts(): Promise<{
   live: boolean;
-  proposals: { id: string; title: string; client: string; price: string; status: string; statusLabel: string; token: string; when: string }[];
+  proposals: AdminProposal[];
   signed: { title: string; signer: string; email: string; when: string }[];
 }> {
-  const proposals = await safeQuery<{ id: string; title: string; client_name: string | null; client_email: string; price_cents: number; status: string; token: string; created_at: string }>(
-    `select id, title, client_name, client_email, price_cents, status, token, created_at from proposals order by created_at desc`
+  const proposals = await safeQuery<{ id: string; title: string; client_name: string | null; client_email: string; scope: string | null; price_cents: number; payment_plan: string; deposit_pct: number; status: string; token: string; created_at: string }>(
+    `select id, title, client_name, client_email, scope, price_cents, payment_plan, deposit_pct, status, token, created_at from proposals order by created_at desc`
   );
   const signed = await safeQuery<{ title: string; signer_name: string; signer_email: string; signed_at: string }>(
     `select pr.title, c.signer_name, c.signer_email, c.signed_at from contracts c join proposals pr on pr.id = c.proposal_id order by c.signed_at desc`
@@ -186,7 +191,9 @@ export async function getContracts(): Promise<{
     live: dbConfigured,
     proposals: proposals.map((p) => ({
       id: p.id, title: p.title, client: p.client_name || p.client_email,
-      price: gbp(p.price_cents), status: badgeFor(p.status), statusLabel: label(p.status),
+      clientName: p.client_name || "", clientEmail: p.client_email, scope: p.scope || "",
+      priceCents: p.price_cents, price: gbp(p.price_cents), paymentPlan: p.payment_plan, depositPct: p.deposit_pct,
+      status: badgeFor(p.status), statusLabel: label(p.status), rawStatus: p.status,
       token: p.token, when: dayMonth(p.created_at),
     })),
     signed: signed.map((s) => ({ title: s.title, signer: s.signer_name, email: s.signer_email, when: dayMonthYear(s.signed_at) })),
