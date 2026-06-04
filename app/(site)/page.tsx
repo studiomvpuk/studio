@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Showcase from "../components/Showcase";
-import HeroParticles from "../components/HeroParticles";
+// import HeroParticles from "../components/HeroParticles";
 import { stats } from "./content";
 
 export default function Home() {
@@ -8,7 +8,7 @@ export default function Home() {
     <>
       {/* HERO */}
       <header className="hero">
-        <HeroParticles />
+        {/* <HeroParticles /> */}
         <div className="wrap">
           <div className="avail"><span className="dot"></span>Booking Q3 2026 · 2 project slots open</div>
           <h1>We turn ideas into products people <em>actually use.</em></h1>
