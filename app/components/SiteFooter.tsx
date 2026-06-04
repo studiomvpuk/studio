@@ -28,7 +28,7 @@ export default function SiteFooter() {
             <div className="foot-col">
               <h4>Connect</h4>
               <a href="https://instagram.com/studiomvp_">Instagram</a>
-              <a href="mailto:hello@studiomvp.co.uk">Email</a>
+              <a href="mailto:officialstudiomvp@gmail.com">Email</a>
             </div>
           </div>
         </div>

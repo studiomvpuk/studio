@@ -12,7 +12,7 @@ export default function ContactPage() {
         <p>Tell us what you&rsquo;re building. We&rsquo;ll come back with a plan, a timeline and a price — usually within a day. We take on only a few projects each quarter.</p>
         <div className="btns" style={{ justifyContent: "center" }}>
           <Link className="btn-w" href="/start">Start a project →</Link>
-          <a className="btn-o" href="mailto:hello@studiomvp.co.uk">hello@studiomvp.co.uk</a>
+          <a className="btn-o" href="mailto:officialstudiomvp@gmail.com">officialstudiomvp@gmail.com</a>
         </div>
       </div>
     </section>
