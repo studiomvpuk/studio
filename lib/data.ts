@@ -12,6 +12,7 @@ const STATUS_LABELS: Record<string, string> = {
   active: "Active", completed: "Completed", lead: "Lead", due: "Due", paid: "Paid",
   pending: "Pending", approved: "Approved", changes: "Changes requested",
   open: "Unpaid", void: "Void",
+  paused: "Paused", ended: "Ended",
 };
 const label = (s: string) => STATUS_LABELS[s] || s;
 
@@ -394,6 +395,72 @@ export async function getPaymentLinks(): Promise<PaymentLinkRow[]> {
     client: r.client_email || "—",
     when: dayMonth(r.paid_at || r.created_at),
   }));
+}
+
+/* ───────── RETAINERS ───────── */
+const periodSuffix: Record<string, string> = { monthly: "/mo", quarterly: "/qtr", yearly: "/yr" };
+export const periodWord: Record<string, string> = { monthly: "month", quarterly: "quarter", yearly: "year" };
+
+export type RetainerRow = {
+  id: string; title: string; client: string; project: string;
+  amount: string; period: string; status: string; statusLabel: string; badge: string;
+  nextDue: string; collected: string;
+  projectId: string | null; amountCents: number; rawPeriod: string; rawStatus: string;
+};
+export async function getRetainers(): Promise<{ live: boolean; rows: RetainerRow[] }> {
+  const rows = await safeQuery<{
+    id: string; title: string; amount_cents: number; period: string; status: string; next_due: string | null;
+    project_id: string | null; client_name: string | null; client_email: string | null; project_name: string | null; collected: number;
+  }>(`
+    select r.id, r.title, r.amount_cents, r.period, r.status, r.next_due, r.project_id,
+           (select name from users u where u.id = r.client_id) as client_name,
+           (select email from users u where u.id = r.client_id) as client_email,
+           (select name from projects p where p.id = r.project_id) as project_name,
+           coalesce((select sum(amount_cents) from retainer_payments rp where rp.retainer_id = r.id),0) as collected
+      from retainers r order by r.created_at desc
+  `);
+  return {
+    live: dbConfigured,
+    rows: rows.map((r) => ({
+      id: r.id, title: r.title, client: r.client_name || r.client_email || "—", project: r.project_name || "—",
+      amount: `${gbp(r.amount_cents)}${periodSuffix[r.period] || ""}`, period: periodWord[r.period] || r.period,
+      status: label(r.status), statusLabel: label(r.status),
+      badge: r.status === "active" ? "b-ok" : r.status === "paused" ? "b-warn" : "b-mute",
+      nextDue: r.status === "active" ? dayMonthYear(r.next_due) : "—", collected: gbp(r.collected),
+      projectId: r.project_id, amountCents: r.amount_cents, rawPeriod: r.period, rawStatus: r.status,
+    })),
+  };
+}
+
+export async function getProjectOptions(): Promise<{ id: string; label: string }[]> {
+  const rows = await safeQuery<{ id: string; name: string; client: string | null }>(
+    `select p.id, p.name, (select name from users u where u.id = p.client_id) as client from projects p order by p.created_at desc`
+  );
+  return rows.map((p) => ({ id: p.id, label: p.client ? `${p.name} — ${p.client}` : p.name }));
+}
+
+export type ClientRetainer = {
+  id: string; title: string; amount: string; period: string; status: string; statusLabel: string;
+  nextDue: string; active: boolean; payments: { amount: string; label: string; when: string }[];
+};
+export async function getClientRetainer(clientId?: string): Promise<ClientRetainer | null> {
+  if (!clientId || !dbConfigured) return null;
+  const rows = await safeQuery<{ id: string; title: string; amount_cents: number; period: string; status: string; next_due: string | null }>(
+    `select id, title, amount_cents, period, status, next_due from retainers where client_id = $1 and status <> 'ended' order by created_at desc limit 1`,
+    [clientId]
+  );
+  if (!rows.length) return null;
+  const r = rows[0];
+  const pays = await safeQuery<{ amount_cents: number; period_label: string | null; paid_at: string }>(
+    `select amount_cents, period_label, paid_at from retainer_payments where retainer_id = $1 order by paid_at desc limit 12`,
+    [r.id]
+  );
+  return {
+    id: r.id, title: r.title, amount: `${gbp(r.amount_cents)}${periodSuffix[r.period] || ""}`,
+    period: periodWord[r.period] || r.period, status: r.status, statusLabel: label(r.status),
+    nextDue: dayMonthYear(r.next_due), active: r.status === "active",
+    payments: pays.map((p) => ({ amount: gbp(p.amount_cents), label: p.period_label || "Retainer", when: dayMonth(p.paid_at) })),
+  };
 }
 
 /* ───────── ADMIN MESSAGES (inbox) ───────── */

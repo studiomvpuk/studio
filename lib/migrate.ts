@@ -115,6 +115,28 @@ create table if not exists payment_links (
   created_at timestamptz not null default now(), paid_at timestamptz
 );
 create index if not exists payment_links_token_idx on payment_links (token);
+
+create table if not exists retainers (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid references projects(id) on delete set null,
+  client_id uuid references users(id) on delete set null,
+  title text not null default 'Ongoing retainer',
+  amount_cents integer not null,
+  period text not null default 'monthly' check (period in ('monthly','quarterly','yearly')),
+  status text not null default 'active' check (status in ('active','paused','ended')),
+  next_due date,
+  created_at timestamptz not null default now()
+);
+create index if not exists retainers_client_idx on retainers (client_id);
+
+create table if not exists retainer_payments (
+  id uuid primary key default gen_random_uuid(),
+  retainer_id uuid not null references retainers(id) on delete cascade,
+  amount_cents integer not null,
+  period_label text,
+  stripe_payment_intent text,
+  paid_at timestamptz not null default now()
+);
 `;
 
 // The admin account is created automatically. Override the email with ADMIN_EMAIL.

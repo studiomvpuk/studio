@@ -23,10 +23,22 @@ export async function POST(req: Request) {
   let reference: string;
   let invoiceId: string | null = null;
   let paymentLinkId: string | null = null;
+  let retainerId: string | null = null;
   let successUrl = `${base}/dashboard?paid=1`;
   let cancelUrl = `${base}/dashboard?canceled=1`;
 
-  if (body.paymentLinkToken && dbConfigured) {
+  if (body.retainerId && dbConfigured) {
+    const rows = await query<{ id: string; amount_cents: number; title: string }>(
+      `select id, amount_cents, title from retainers where id = $1 and status = 'active'`,
+      [String(body.retainerId)]
+    );
+    if (!rows.length) return NextResponse.json({ error: "Retainer not found or not active." }, { status: 404 });
+    amountCents = rows[0].amount_cents;
+    reference = `${rows[0].title} — retainer`;
+    retainerId = rows[0].id;
+    successUrl = `${base}/dashboard/retainer?paid=1`;
+    cancelUrl = `${base}/dashboard/retainer?canceled=1`;
+  } else if (body.paymentLinkToken && dbConfigured) {
     const rows = await query<{ id: string; amount_cents: number; description: string; token: string }>(
       `select id, amount_cents, description, token from payment_links where token = $1 and status = 'open'`,
       [String(body.paymentLinkToken)]
@@ -68,7 +80,7 @@ export async function POST(req: Request) {
         quantity: 1,
       },
     ],
-    metadata: { invoiceId: invoiceId ?? "", paymentLinkId: paymentLinkId ?? "", reference },
+    metadata: { invoiceId: invoiceId ?? "", paymentLinkId: paymentLinkId ?? "", retainerId: retainerId ?? "", reference },
     success_url: successUrl,
     cancel_url: cancelUrl,
   });
