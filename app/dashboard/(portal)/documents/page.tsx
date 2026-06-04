@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { getClientData } from "@/lib/data";
 import ClientTop from "../../ClientTop";
@@ -24,7 +23,7 @@ export default async function DocumentsPage() {
                 <div className="item" key={i}>
                   <div className="ic">⤓</div>
                   <div className="t">{d.label}<small>{d.meta}</small></div>
-                  {d.href ? <Link className="link" href={d.href}>View</Link> : null}
+                  {d.href ? <a className="link" href={d.href} target="_blank" rel="noopener noreferrer">View</a> : null}
                 </div>
               ))
             ) : (

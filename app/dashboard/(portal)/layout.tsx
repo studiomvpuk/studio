@@ -16,8 +16,9 @@ export default async function ClientPortalLayout({ children }: { children: React
         <div className="main">
           {children}
           <div className="cl-foot">
-            <Link href="/" className="badge b-mute">← Site</Link>
-            <Link href="/admin" className="badge b-mute">Admin view</Link>
+            <Link href="/" className="badge b-mute">← studiomvp.co.uk</Link>
+            {/* Admins previewing the client portal can jump back to admin; clients never see this. */}
+            {session?.role === "admin" ? <Link href="/admin" className="badge b-mute">Admin view</Link> : null}
             {session ? (
               <form action="/api/auth/logout" method="post" style={{ marginLeft: "auto" }}>
                 <button className="btn-o btn" type="submit">Sign out</button>

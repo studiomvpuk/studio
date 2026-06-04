@@ -117,6 +117,18 @@
 .admin-app .msg-mine .msg-meta { color: rgba(255, 255, 255, 0.6); }
 .admin-app .msg-body { font-size: 0.9rem; line-height: 1.45; }
 
+/* project documents manager */
+.admin-app .doc-list { display: flex; flex-direction: column; }
+.admin-app .doc-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--hair); }
+.admin-app .doc-row:last-child { border-bottom: none; }
+.admin-app .doc-main { min-width: 0; }
+.admin-app .doc-meta { font-size: 0.76rem; color: var(--grey-2); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 340px; }
+.admin-app .doc-edit { display: flex; gap: 8px; padding: 10px 0; flex-wrap: wrap; align-items: center; }
+.admin-app .doc-edit input { flex: 1; min-width: 140px; border: 1px solid var(--hair); border-radius: 9px; padding: 9px 11px; font-family: var(--body); font-size: 0.88rem; color: var(--ink); outline: none; }
+.admin-app .doc-add { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.admin-app .doc-add input { flex: 1; min-width: 150px; border: 1px solid var(--hair); border-radius: 10px; padding: 11px 13px; font-family: var(--body); font-size: 0.9rem; color: var(--ink); outline: none; }
+.admin-app .doc-add input:focus, .admin-app .doc-edit input:focus { border-color: var(--ink); }
+
 /* contract view/edit modal */
 .admin-app .am-overlay { position: fixed; inset: 0; background: rgba(10, 10, 12, 0.55); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 200; animation: amFade 0.2s ease; }
 .admin-app .am-modal { background: #fff; border-radius: 18px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; padding: 28px 30px; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.45); animation: amPop 0.22s cubic-bezier(0.2, 0.8, 0.2, 1); }

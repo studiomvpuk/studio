@@ -4,6 +4,7 @@ import { getProjectDetail } from "@/lib/data";
 import AdminTop from "../../../AdminTop";
 import PaymentTerms from "../../../PaymentTerms";
 import ProjectActions from "../../../ProjectActions";
+import ProjectDocuments from "../../../ProjectDocuments";
 import MessageThread from "@/app/components/MessageThread";
 
 export const metadata = { title: "Project — StudioMVP Admin" };
@@ -93,6 +94,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               <div className="empty">No approvals requested yet.</div>
             )}
           </div>
+
+          {/* DOCUMENTS (admin manages → client sees) */}
+          <ProjectDocuments projectId={p.id} initial={p.documents} />
 
           {/* MESSAGES (live thread) */}
           <div className="card">

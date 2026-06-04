@@ -116,6 +116,15 @@ create table if not exists events (
   fired_at  timestamptz not null default now()
 );
 
+create table if not exists documents (
+  id          uuid primary key default gen_random_uuid(),
+  project_id  uuid not null references projects(id) on delete cascade,
+  label       text not null,
+  url         text not null,
+  created_at  timestamptz not null default now()
+);
+create index if not exists documents_project_idx on documents (project_id);
+
 create table if not exists payment_links (
   id            uuid primary key default gen_random_uuid(),
   description   text not null,

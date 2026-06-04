@@ -131,6 +131,7 @@ export type ProjectDetail = {
   invoices: { id: string; amount: string; type: string; status: string; when: string }[];
   approvals: { id: string; item: string; status: string; when: string }[];
   messages: { author: string; body: string; when: string; mine: boolean }[];
+  documents: { id: string; label: string; url: string; when: string }[];
 };
 export async function getProjectDetail(id: string): Promise<ProjectDetail | null> {
   const rows = await safeQuery<{
@@ -156,6 +157,9 @@ export async function getProjectDetail(id: string): Promise<ProjectDetail | null
   const messages = await safeQuery<{ author: string; body: string; created_at: string }>(
     `select author, body, created_at from messages where project_id = $1 order by created_at asc limit 50`, [id]
   );
+  const docs = await safeQuery<{ id: string; label: string; url: string; created_at: string }>(
+    `select id, label, url, created_at from documents where project_id = $1 order by created_at desc`, [id]
+  );
 
   const paidCents = invoices.filter((i) => i.status === "paid").reduce((s, i) => s + i.amount_cents, 0);
   return {
@@ -166,6 +170,7 @@ export async function getProjectDetail(id: string): Promise<ProjectDetail | null
     invoices: invoices.map((i) => ({ id: i.id, amount: gbp(i.amount_cents), type: label(i.type), status: i.status, when: dayMonth(i.paid_at || i.created_at) })),
     approvals: approvals.map((a) => ({ id: a.id, item: a.item, status: a.status, when: dayMonth(a.created_at) })),
     messages: messages.map((m) => ({ author: m.author, body: m.body, when: dayMonth(m.created_at), mine: m.author !== "client" })),
+    documents: docs.map((d) => ({ id: d.id, label: d.label, url: d.url, when: dayMonth(d.created_at) })),
   };
 }
 
@@ -309,6 +314,9 @@ export async function getClientData(clientId?: string): Promise<ClientData> {
     `select pr.token, pr.title, c.signed_at from contracts c join proposals pr on pr.id = c.proposal_id where c.project_id = $1 order by c.signed_at desc`,
     [p.id]
   );
+  const managedDocs = await safeQuery<{ label: string; url: string; created_at: string }>(
+    `select label, url, created_at from documents where project_id = $1 order by created_at desc`, [p.id]
+  );
 
   const paidCents = invoices.filter((i) => i.status === "paid").reduce((s, i) => s + i.amount_cents, 0);
   // The next thing the client can pay = the first invoice that's actually due
@@ -324,12 +332,16 @@ export async function getClientData(clientId?: string): Promise<ClientData> {
   const nextPhase = phases.find((x) => x.state === "active")?.name || phases.find((x) => x.state === "upcoming")?.name || null;
 
   const invLabel: Record<string, string> = { deposit: "Deposit invoice", balance: "Balance invoice", full: "Full payment" };
-  const documents = docRows.flatMap((d) => {
-    const out: { label: string; meta: string; href: string | null }[] = [];
-    if (d.signed_at) out.push({ label: "Signed agreement", meta: `Signed ${dayMonthYear(d.signed_at)}`, href: `/proposal/${d.token}` });
-    out.push({ label: "Project proposal", meta: d.title, href: `/proposal/${d.token}` });
-    return out;
-  });
+  // Admin-added documents first, then the auto contract/proposal artefacts.
+  const documents: { label: string; meta: string; href: string | null }[] = [
+    ...managedDocs.map((d) => ({ label: d.label, meta: `Added ${dayMonth(d.created_at)}`, href: d.url })),
+    ...docRows.flatMap((d) => {
+      const out: { label: string; meta: string; href: string | null }[] = [];
+      if (d.signed_at) out.push({ label: "Signed agreement", meta: `Signed ${dayMonthYear(d.signed_at)}`, href: `/proposal/${d.token}` });
+      out.push({ label: "Project proposal", meta: d.title, href: `/proposal/${d.token}` });
+      return out;
+    }),
+  ];
 
   return {
     live: dbConfigured,
