@@ -38,7 +38,7 @@ function PreviewModal({ p, onClose, onEdit }: { p: Proposal; onClose: () => void
       <div className="am-modal" role="dialog" aria-modal="true" aria-label="Proposal preview">
         <div className="am-head">
           <div>
-            <span className="badge b-mute" style={{ marginBottom: 10 }}>Proposal · {p.statusLabel}</span>
+            <span className="badge b-mute" style={{ marginBottom: 10 }}>{p.rawStatus === "signed" ? "Contract · Signed" : `Proposal · ${p.statusLabel}`}</span>
             <h3>{p.title}</h3>
             <div style={{ color: "var(--grey-2)", fontSize: ".88rem", marginTop: 4 }}>Prepared for {p.client}</div>
           </div>
@@ -69,7 +69,7 @@ function PreviewModal({ p, onClose, onEdit }: { p: Proposal; onClose: () => void
         </div>
 
         <div className="am-actions">
-          {p.rawStatus !== "signed" && <button type="button" className="btn" onClick={onEdit}>Edit contract</button>}
+          <button type="button" className="btn" onClick={onEdit}>Edit contract</button>
           <button type="button" className="btn-o btn" onClick={copy}>{copied ? "Copied ✓" : "Copy client link"}</button>
           <a className="btn-o btn" href={link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>Open client view ↗</a>
         </div>
@@ -112,9 +112,14 @@ function EditModal({ p, onClose, onSaved }: { p: Proposal; onClose: () => void; 
     <div className="am-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="am-modal" role="dialog" aria-modal="true" aria-label="Edit contract">
         <div className="am-head">
-          <h3>Adjust contract</h3>
+          <h3>{p.rawStatus === "signed" ? "Update signed contract" : "Adjust proposal"}</h3>
           <button type="button" className="am-x" aria-label="Close" onClick={onClose}>✕</button>
         </div>
+        {p.rawStatus === "signed" ? (
+          <p style={{ fontSize: ".85rem", color: "var(--grey)", margin: "0 0 12px", lineHeight: 1.5 }}>
+            This contract is signed — saving updates the project name, total and any <b>unpaid</b> invoices on the client&rsquo;s dashboard. Paid invoices aren&rsquo;t changed.
+          </p>
+        ) : null}
         <form className="am-form" onSubmit={save}>
           <label>Client name</label>
           <input value={f.clientName} onChange={set("clientName")} placeholder="Amara O." />
@@ -169,9 +174,7 @@ export default function ContractsManager({ proposals }: { proposals: Proposal[] 
                 <td>{p.when}</td>
                 <td style={{ whiteSpace: "nowrap" }}>
                   <button type="button" className="btn-o btn am-rowbtn" onClick={() => setPreview(p)}>View</button>
-                  {p.rawStatus !== "signed" && (
-                    <button type="button" className="btn-o btn am-rowbtn" onClick={() => setEdit(p)}>Edit</button>
-                  )}
+                  <button type="button" className="btn-o btn am-rowbtn" onClick={() => setEdit(p)}>Edit</button>
                 </td>
               </tr>
             ))}
