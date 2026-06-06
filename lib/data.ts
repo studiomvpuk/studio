@@ -21,7 +21,7 @@ export type AdminData = {
   empty: boolean;
   stats: { k: string; v: string; delta: string; warn?: boolean }[];
   projects: { id: string | null; name: string; phase: string; pay: string; badge: string; status: string }[];
-  leads: { name: string; status: string; est: string }[];
+  leads: { id: string; name: string; status: string; est: string }[];
 };
 
 export async function getAdminData(): Promise<AdminData> {
@@ -32,8 +32,8 @@ export async function getAdminData(): Promise<AdminData> {
            coalesce((select sum(amount_cents) from invoices i where i.project_id = p.id and i.status='paid'),0) as paid_cents
       from projects p where p.status in ('active','signed') order by p.created_at desc limit 8
   `);
-  const leads = await safeQuery<{ name: string | null; email: string; status: string; est_cents: number | null }>(
-    `select name, email, status, est_cents from leads where status in ('new','call_booked','proposal') order by created_at desc limit 6`
+  const leads = await safeQuery<{ id: string; name: string | null; email: string; status: string; est_cents: number | null }>(
+    `select id, name, email, status, est_cents from leads where status in ('new','call_booked','proposal') order by created_at desc limit 6`
   );
   const totals = await safeQuery<{ pipeline: number; collected: number; outstanding: number; active: number }>(`
     select
@@ -63,7 +63,7 @@ export async function getAdminData(): Promise<AdminData> {
         status: paid ? "Paid in full" : "Balance due",
       };
     }),
-    leads: leads.map((l) => ({ name: l.name || l.email, status: l.status, est: l.est_cents ? gbp(l.est_cents) : "—" })),
+    leads: leads.map((l) => ({ id: l.id, name: l.name || l.email, status: l.status, est: l.est_cents ? gbp(l.est_cents) : "—" })),
   };
 }
 
@@ -72,8 +72,8 @@ export type Deal = { nm: string; a?: string; b?: string; badge?: string; badgeTe
 export type PipelineCol = { h: string; deals: Deal[] };
 
 export async function getPipeline(): Promise<{ live: boolean; empty: boolean; cols: PipelineCol[] }> {
-  const leads = await safeQuery<{ name: string | null; email: string; status: string; est_cents: number | null }>(
-    `select name, email, status, est_cents from leads where status in ('new','call_booked') order by created_at desc`
+  const leads = await safeQuery<{ id: string; name: string | null; email: string; status: string; est_cents: number | null }>(
+    `select id, name, email, status, est_cents from leads where status in ('new','call_booked') order by created_at desc`
   );
   const proposals = await safeQuery<{ title: string; status: string; price_cents: number; token: string }>(
     `select title, status, price_cents, token from proposals where status in ('draft','sent','viewed') order by created_at desc`
@@ -84,7 +84,7 @@ export async function getPipeline(): Promise<{ live: boolean; empty: boolean; co
   const est = (c: number | null) => (c ? gbp(c) + " est" : "—");
 
   const cols: PipelineCol[] = [
-    { h: "Leads", deals: leads.map((l) => ({ nm: l.name || l.email, a: label(l.status), b: est(l.est_cents) })) },
+    { h: "Leads", deals: leads.map((l) => ({ nm: l.name || l.email, a: label(l.status), b: est(l.est_cents), href: `/admin/leads/${l.id}` })) },
     { h: "Proposal", deals: proposals.map((p) => ({ nm: p.title, a: label(p.status), b: gbp(p.price_cents), href: `/admin/contracts` })) },
     { h: "Signed", deals: projects.filter((p) => p.status === "signed").map((p) => ({ nm: p.name, badge: "b-warn", badgeText: "Deposit due", href: `/admin/projects/${p.id}` })) },
     { h: "Active", deals: projects.filter((p) => p.status === "active").map((p) => ({ nm: p.name, badge: "b-info", badgeText: p.current_phase, href: `/admin/projects/${p.id}` })) },
@@ -92,6 +92,25 @@ export async function getPipeline(): Promise<{ live: boolean; empty: boolean; co
   ];
   const empty = cols.every((c) => c.deals.length === 0);
   return { live: dbConfigured, empty, cols };
+}
+
+/* ───────── LEADS ───────── */
+export type LeadDetail = {
+  id: string; name: string; email: string; brief: string | null;
+  source: string; status: string; statusLabel: string; est: string; when: string;
+};
+export async function getLeadDetail(id: string): Promise<LeadDetail | null> {
+  const rows = await safeQuery<{
+    id: string; name: string | null; email: string; brief: string | null;
+    source: string | null; status: string; est_cents: number | null; created_at: string;
+  }>(`select id, name, email, brief, source, status, est_cents, created_at from leads where id = $1`, [id]);
+  if (!rows.length) return null;
+  const l = rows[0];
+  return {
+    id: l.id, name: l.name || l.email, email: l.email, brief: l.brief,
+    source: l.source || "website", status: l.status, statusLabel: label(l.status),
+    est: l.est_cents ? gbp(l.est_cents) : "—", when: dayMonthYear(l.created_at),
+  };
 }
 
 /* ───────── PROJECTS ───────── */

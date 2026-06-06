@@ -4,8 +4,8 @@ import { useState } from "react";
 
 const empty = { clientName: "", clientEmail: "", title: "", scope: "", priceGBP: "", paymentPlan: "deposit", depositPct: "50" };
 
-export default function NewProposalForm() {
-  const [f, setF] = useState(empty);
+export default function NewProposalForm({ initial }: { initial?: Partial<typeof empty> }) {
+  const [f, setF] = useState({ ...empty, ...initial });
   const [busy, setBusy] = useState(false);
   const [link, setLink] = useState("");
   const [err, setErr] = useState("");

@@ -76,9 +76,11 @@ export default async function AdminDashboard() {
             <table>
               <tbody>
                 <tr><th>Lead</th><th>Status</th><th>Est.</th></tr>
-                {data.leads.map((l, i) => (
-                  <tr key={i}>
-                    <td><div className="pname">{l.name}</div></td>
+                {data.leads.map((l) => (
+                  <tr key={l.id}>
+                    <td>
+                      <Link href={`/admin/leads/${l.id}`} className="pname" style={{ textDecoration: "none", color: "inherit" }}>{l.name}</Link>
+                    </td>
                     <td><span className="badge b-mute" style={{ textTransform: "capitalize" }}>{l.status.replace(/_/g, " ")}</span></td>
                     <td>{l.est}</td>
                   </tr>
