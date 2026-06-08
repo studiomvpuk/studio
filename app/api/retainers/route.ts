@@ -19,23 +19,31 @@ export async function POST(req: Request) {
   if (bad) return NextResponse.json({ error: bad.error }, { status: bad.status });
 
   const b = await req.json().catch(() => ({}));
-  const projectId = String(b.projectId || "");
+  let clientId = String(b.clientId || "");
+  const projectId = String(b.projectId || ""); // optional — a retainer can stand alone
   const title = String(b.title || "").trim() || "Ongoing retainer";
   const amountCents = Math.round(Number(b.amount) * 100);
   const period = PERIODS.includes(b.period) ? b.period : "monthly";
 
-  if (!projectId) return NextResponse.json({ error: "Pick a project / client." }, { status: 400 });
   if (!Number.isFinite(amountCents) || amountCents < 100) {
     return NextResponse.json({ error: "Enter an amount of £1 or more." }, { status: 400 });
   }
 
-  const proj = await query<{ client_id: string | null }>(`select client_id from projects where id = $1`, [projectId]);
-  if (!proj.length) return NextResponse.json({ error: "Project not found." }, { status: 404 });
+  // If a project is given, validate it and (when no client picked) derive the client from it.
+  if (projectId) {
+    const proj = await query<{ client_id: string | null }>(`select client_id from projects where id = $1`, [projectId]);
+    if (!proj.length) return NextResponse.json({ error: "Project not found." }, { status: 404 });
+    if (!clientId) clientId = proj[0].client_id || "";
+  }
+
+  if (!clientId) return NextResponse.json({ error: "Pick a client." }, { status: 400 });
+  const client = await query<{ id: string }>(`select id from users where id = $1`, [clientId]);
+  if (!client.length) return NextResponse.json({ error: "Client not found." }, { status: 404 });
 
   const rows = await query<{ id: string }>(
     `insert into retainers (project_id, client_id, title, amount_cents, period, status, next_due)
      values ($1,$2,$3,$4,$5,'active', current_date) returning id`,
-    [projectId, proj[0].client_id, title, amountCents, period]
+    [projectId || null, clientId, title, amountCents, period]
   );
   return NextResponse.json({ ok: true, id: rows[0].id });
 }

@@ -567,10 +567,17 @@ a { color: inherit; text-decoration: none; }
   .mvp nav .links { display: none; }
   .mvp nav .links.open {
     display: flex; flex-direction: column; align-items: stretch; gap: 4px;
-    position: fixed; inset: 0; top: 60px; padding: 20px;
-    background: rgba(8,8,8,.98); backdrop-filter: blur(14px); z-index: 95;
+    /* explicit left/right/top/height so it works even when nav.scrolled's
+       backdrop-filter turns the nav into the containing block for fixed kids */
+    position: fixed; left: 0; right: 0; top: 0; height: 100vh; height: 100dvh;
+    padding: 80px 20px calc(40px + env(safe-area-inset-bottom));
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+    /* fully opaque — iOS Safari skips bare backdrop-filter, so never rely on it for opacity */
+    background: #070707; z-index: 95;
   }
-  .mvp nav.light .links.open { background: rgba(243,242,239,.98); }
+  .mvp nav.light .links.open { background: #f3f2ef; }
+  /* keep the logo + Close button above the full-screen menu panel */
+  .mvp nav .wordmark, .mvp nav .nav-right { position: relative; z-index: 96; }
   .mvp nav .links.open a { font-size: 1.5rem; font-family: var(--display); padding: 16px 14px; border-bottom: 1px solid var(--line-2); }
   .mvp nav .links.open .menu-cta { display: block; font-family: var(--body); font-size: .9rem; margin-top: 8px; border: 1px solid var(--line); border-radius: 40px; text-align: center; }
   .mvp nav .links.open .menu-cta:last-child { background: #fff; color: #000; border-color: #fff; }

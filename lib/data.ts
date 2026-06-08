@@ -458,6 +458,15 @@ export async function getProjectOptions(): Promise<{ id: string; label: string }
   return rows.map((p) => ({ id: p.id, label: p.client ? `${p.name} — ${p.client}` : p.name }));
 }
 
+// Everyone who holds an account (not the studio admins) — so a retainer can be
+// set up for a client even when they have no project assigned (e.g. site care).
+export async function getClientOptions(): Promise<{ id: string; label: string }[]> {
+  const rows = await safeQuery<{ id: string; name: string | null; email: string }>(
+    `select id, name, email from users where role <> 'admin' order by coalesce(name, email)`
+  );
+  return rows.map((u) => ({ id: u.id, label: u.name ? `${u.name} — ${u.email}` : u.email }));
+}
+
 export type ClientRetainer = {
   id: string; title: string; amount: string; period: string; status: string; statusLabel: string;
   nextDue: string; active: boolean; payments: { amount: string; label: string; when: string }[];
