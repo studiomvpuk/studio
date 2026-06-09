@@ -64,9 +64,9 @@ function EditModal({ r, onClose, onSaved }: { r: Retainer; onClose: () => void; 
   );
 }
 
-export default function RetainersManager({ retainers, projects }: { retainers: Retainer[]; projects: ProjOpt[] }) {
+export default function RetainersManager({ retainers, projects, clients }: { retainers: Retainer[]; projects: ProjOpt[]; clients: ProjOpt[] }) {
   const router = useRouter();
-  const empty = { projectId: "", title: "Ongoing retainer", amount: "", period: "monthly" };
+  const empty = { clientId: "", projectId: "", title: "Ongoing retainer", amount: "", period: "monthly" };
   const [create, setCreate] = useState(empty);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -76,7 +76,7 @@ export default function RetainersManager({ retainers, projects }: { retainers: R
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
-    if (!create.projectId || !create.amount) { setErr("Pick a project and an amount."); return; }
+    if (!create.clientId || !create.amount) { setErr("Pick a client and an amount."); return; }
     setBusy(true); setErr("");
     const res = await fetch("/api/retainers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(create) });
     const data = await res.json();
@@ -121,11 +121,16 @@ export default function RetainersManager({ retainers, projects }: { retainers: R
 
         <div className="card pt-card">
           <div className="ct">Set up a retainer</div>
-          {projects.length ? (
+          {clients.length ? (
             <form className="am-form" onSubmit={add}>
-              <label>Client / project</label>
-              <select value={create.projectId} onChange={setC("projectId")} required>
-                <option value="">Select a project…</option>
+              <label>Client</label>
+              <select value={create.clientId} onChange={setC("clientId")} required>
+                <option value="">Select a client…</option>
+                {clients.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+              </select>
+              <label>Project <span style={{ color: "var(--grey-2)", fontWeight: 400 }}>(optional)</span></label>
+              <select value={create.projectId} onChange={setC("projectId")}>
+                <option value="">No project — general / site care</option>
                 {projects.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
               </select>
               <label>Title</label>
@@ -140,7 +145,7 @@ export default function RetainersManager({ retainers, projects }: { retainers: R
               {err ? <div style={{ marginTop: 10, fontSize: ".85rem", color: "var(--warn)" }}>{err}</div> : null}
             </form>
           ) : (
-            <div className="empty" style={{ padding: 18 }}>Create a project first (sign a proposal) — a retainer attaches to a client&rsquo;s project.</div>
+            <div className="empty" style={{ padding: 18 }}>No client accounts yet. Once someone signs in (or you sign a proposal for them), you can set up a retainer here.</div>
           )}
         </div>
       </div>
