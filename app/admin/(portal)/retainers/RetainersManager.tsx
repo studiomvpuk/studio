@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 type Retainer = {
   id: string; title: string; client: string; project: string;
   amount: string; period: string; status: string; statusLabel: string; badge: string;
-  nextDue: string; collected: string; projectId: string | null; amountCents: number; rawPeriod: string; rawStatus: string;
+  nextDue: string; nextDueISO: string; collected: string; projectId: string | null; amountCents: number; rawPeriod: string; rawStatus: string;
 };
 type ProjOpt = { id: string; label: string };
 
@@ -22,7 +22,7 @@ function useModal(onClose: () => void) {
 
 function EditModal({ r, onClose, onSaved }: { r: Retainer; onClose: () => void; onSaved: () => void }) {
   useModal(onClose);
-  const [f, setF] = useState({ title: r.title, amount: String(Math.round(r.amountCents / 100)), period: r.rawPeriod, status: r.rawStatus });
+  const [f, setF] = useState({ title: r.title, amount: String(Math.round(r.amountCents / 100)), period: r.rawPeriod, status: r.rawStatus, nextDue: r.nextDueISO });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF((s) => ({ ...s, [k]: e.target.value }));
@@ -52,6 +52,8 @@ function EditModal({ r, onClose, onSaved }: { r: Retainer; onClose: () => void; 
           <select value={f.period} onChange={set("period")}>
             <option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option>
           </select>
+          <label>Next payment due</label>
+          <input type="date" value={f.nextDue} onChange={set("nextDue")} />
           <label>Status</label>
           <select value={f.status} onChange={set("status")}>
             <option value="active">Active</option><option value="paused">Paused</option><option value="ended">Ended</option>
@@ -66,7 +68,7 @@ function EditModal({ r, onClose, onSaved }: { r: Retainer; onClose: () => void; 
 
 export default function RetainersManager({ retainers, projects, clients }: { retainers: Retainer[]; projects: ProjOpt[]; clients: ProjOpt[] }) {
   const router = useRouter();
-  const empty = { clientId: "", projectId: "", title: "Ongoing retainer", amount: "", period: "monthly" };
+  const empty = { clientId: "", projectId: "", title: "Ongoing retainer", amount: "", period: "monthly", nextDue: "" };
   const [create, setCreate] = useState(empty);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -141,6 +143,8 @@ export default function RetainersManager({ retainers, projects, clients }: { ret
               <select value={create.period} onChange={setC("period")}>
                 <option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option>
               </select>
+              <label>First payment due <span style={{ color: "var(--grey-2)", fontWeight: 400 }}>(optional — defaults to today)</span></label>
+              <input type="date" value={create.nextDue} onChange={setC("nextDue")} />
               <button type="submit" className="btn" style={{ width: "100%", marginTop: 18 }} disabled={busy}>{busy ? "Creating…" : "Create retainer"}</button>
               {err ? <div style={{ marginTop: 10, fontSize: ".85rem", color: "var(--warn)" }}>{err}</div> : null}
             </form>

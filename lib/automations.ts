@@ -12,9 +12,15 @@ export type EventType =
   | "contract.signed"
   | "invoice.created"
   | "invoice.paid"
+  | "retainer.created"
   | "project.activated"
   | "phase.completed"
   | "project.completed";
+
+const PERIOD_WORD: Record<string, string> = { monthly: "month", quarterly: "quarter", yearly: "year" };
+const gbp = (cents: number) => "£" + (Number(cents) / 100).toLocaleString("en-GB");
+const longDate = (iso: string) =>
+  new Date(`${iso}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 
 export async function dispatch(type: EventType, payload: Record<string, unknown>): Promise<void> {
   if (dbConfigured) {
@@ -96,6 +102,29 @@ async function react(type: EventType, p: Record<string, unknown>): Promise<void>
             intro: `Hi ${name},`,
             paragraphs: ["We've received your payment — thank you. A receipt from Stripe is on its way, and your portal is fully active."],
             cta: { label: "Open your dashboard →", url: `${base()}/dashboard` },
+          }),
+        });
+      }
+      break;
+
+    case "retainer.created":
+      if (email) {
+        const amount = gbp(Number(p.amountCents));
+        const per = PERIOD_WORD[String(p.period)] || "month";
+        const due = p.nextDue ? longDate(String(p.nextDue)) : "shortly";
+        await sendEmail({
+          to: email,
+          subject: "Your ongoing plan with StudioMVP",
+          html: renderEmail({
+            preheader: `${amount} per ${per} — first payment due ${due}.`,
+            heading: "Your ongoing plan is set up",
+            intro: `Hi ${name},`,
+            paragraphs: [
+              `We've set up <strong>${String(p.title || "your retainer")}</strong> — ${amount} per ${per}, keeping things moving on an ongoing basis.`,
+              `Your first payment is due <strong>${due}</strong>. You can pay it in a couple of taps from your dashboard, and you'll always see what's next and your full payment history there.`,
+            ],
+            cta: { label: "View your plan & pay →", url: `${base()}/dashboard/retainer` },
+            footnote: "Need to change anything? Just reply to this email and we'll sort it.",
           }),
         });
       }

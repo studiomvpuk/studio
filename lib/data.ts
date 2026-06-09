@@ -423,15 +423,16 @@ export const periodWord: Record<string, string> = { monthly: "month", quarterly:
 export type RetainerRow = {
   id: string; title: string; client: string; project: string;
   amount: string; period: string; status: string; statusLabel: string; badge: string;
-  nextDue: string; collected: string;
+  nextDue: string; nextDueISO: string; collected: string;
   projectId: string | null; amountCents: number; rawPeriod: string; rawStatus: string;
 };
 export async function getRetainers(): Promise<{ live: boolean; rows: RetainerRow[] }> {
   const rows = await safeQuery<{
-    id: string; title: string; amount_cents: number; period: string; status: string; next_due: string | null;
+    id: string; title: string; amount_cents: number; period: string; status: string; next_due: string | null; next_due_iso: string | null;
     project_id: string | null; client_name: string | null; client_email: string | null; project_name: string | null; collected: number;
   }>(`
-    select r.id, r.title, r.amount_cents, r.period, r.status, r.next_due, r.project_id,
+    select r.id, r.title, r.amount_cents, r.period, r.status, r.next_due,
+           to_char(r.next_due, 'YYYY-MM-DD') as next_due_iso, r.project_id,
            (select name from users u where u.id = r.client_id) as client_name,
            (select email from users u where u.id = r.client_id) as client_email,
            (select name from projects p where p.id = r.project_id) as project_name,
@@ -445,7 +446,8 @@ export async function getRetainers(): Promise<{ live: boolean; rows: RetainerRow
       amount: `${gbp(r.amount_cents)}${periodSuffix[r.period] || ""}`, period: periodWord[r.period] || r.period,
       status: label(r.status), statusLabel: label(r.status),
       badge: r.status === "active" ? "b-ok" : r.status === "paused" ? "b-warn" : "b-mute",
-      nextDue: r.status === "active" ? dayMonthYear(r.next_due) : "—", collected: gbp(r.collected),
+      nextDue: r.status === "active" ? dayMonthYear(r.next_due) : "—",
+      nextDueISO: r.next_due_iso || "", collected: gbp(r.collected),
       projectId: r.project_id, amountCents: r.amount_cents, rawPeriod: r.period, rawStatus: r.status,
     })),
   };
