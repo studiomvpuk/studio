@@ -50,7 +50,7 @@ function EditModal({ r, onClose, onSaved }: { r: Retainer; onClose: () => void; 
           <input required inputMode="decimal" value={f.amount} onChange={set("amount")} />
           <label>Billing period</label>
           <select value={f.period} onChange={set("period")}>
-            <option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option>
+            <option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="halfyearly">Half-yearly</option><option value="yearly">Yearly</option>
           </select>
           <label>Next payment due</label>
           <input type="date" value={f.nextDue} onChange={set("nextDue")} />
@@ -141,7 +141,7 @@ export default function RetainersManager({ retainers, projects, clients }: { ret
               <input required inputMode="decimal" value={create.amount} onChange={setC("amount")} placeholder="1500" />
               <label>Billing period</label>
               <select value={create.period} onChange={setC("period")}>
-                <option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option>
+                <option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="halfyearly">Half-yearly</option><option value="yearly">Yearly</option>
               </select>
               <label>First payment due <span style={{ color: "var(--grey-2)", fontWeight: 400 }}>(optional — defaults to today)</span></label>
               <input type="date" value={create.nextDue} onChange={setC("nextDue")} />

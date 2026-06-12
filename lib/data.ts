@@ -417,8 +417,8 @@ export async function getPaymentLinks(): Promise<PaymentLinkRow[]> {
 }
 
 /* ───────── RETAINERS ───────── */
-const periodSuffix: Record<string, string> = { monthly: "/mo", quarterly: "/qtr", yearly: "/yr" };
-export const periodWord: Record<string, string> = { monthly: "month", quarterly: "quarter", yearly: "year" };
+const periodSuffix: Record<string, string> = { monthly: "/mo", quarterly: "/qtr", halfyearly: "/6mo", yearly: "/yr" };
+export const periodWord: Record<string, string> = { monthly: "month", quarterly: "quarter", halfyearly: "half-year", yearly: "year" };
 
 export type RetainerRow = {
   id: string; title: string; client: string; project: string;

@@ -17,7 +17,7 @@ export type EventType =
   | "phase.completed"
   | "project.completed";
 
-const PERIOD_WORD: Record<string, string> = { monthly: "month", quarterly: "quarter", yearly: "year" };
+const PERIOD_WORD: Record<string, string> = { monthly: "month", quarterly: "quarter", halfyearly: "half-year", yearly: "year" };
 const gbp = (cents: number) => "£" + (Number(cents) / 100).toLocaleString("en-GB");
 const longDate = (iso: string) =>
   new Date(`${iso}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });

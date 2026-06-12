@@ -12,7 +12,7 @@ async function guard() {
   return null;
 }
 
-const PERIODS = ["monthly", "quarterly", "yearly"];
+const PERIODS = ["monthly", "quarterly", "halfyearly", "yearly"];
 
 // Accept only a clean YYYY-MM-DD; anything else → null (caller falls back to today).
 function isoDate(v: unknown): string | null {

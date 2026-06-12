@@ -46,7 +46,7 @@ export async function POST(req: Request) {
         );
         await query(
           `update retainers set next_due = (greatest(coalesce(next_due, current_date), current_date)
-             + case period when 'yearly' then interval '1 year' when 'quarterly' then interval '3 months' else interval '1 month' end)::date
+             + case period when 'yearly' then interval '1 year' when 'halfyearly' then interval '6 months' when 'quarterly' then interval '3 months' else interval '1 month' end)::date
            where id = $1`,
           [retainerId]
         );

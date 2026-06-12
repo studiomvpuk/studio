@@ -122,7 +122,7 @@ create table if not exists retainers (
   client_id uuid references users(id) on delete set null,
   title text not null default 'Ongoing retainer',
   amount_cents integer not null,
-  period text not null default 'monthly' check (period in ('monthly','quarterly','yearly')),
+  period text not null default 'monthly' check (period in ('monthly','quarterly','halfyearly','yearly')),
   status text not null default 'active' check (status in ('active','paused','ended')),
   next_due date,
   created_at timestamptz not null default now()
@@ -154,6 +154,9 @@ export function ensureSchema(): Promise<void> {
   if (!ran) {
     ran = (async () => {
       await query(SCHEMA);
+      // Widen the retainer period whitelist on databases created before half-yearly existed.
+      await query(`alter table retainers drop constraint if exists retainers_period_check`);
+      await query(`alter table retainers add constraint retainers_period_check check (period in ('monthly','quarterly','halfyearly','yearly'))`);
       await query(adminSeed());
       console.log("[migrate] schema ensured + admin seeded");
     })().catch((err) => {
