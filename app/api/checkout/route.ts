@@ -36,7 +36,8 @@ export async function POST(req: Request) {
     amountCents = rows[0].amount_cents;
     reference = `${rows[0].title} — retainer`;
     retainerId = rows[0].id;
-    successUrl = `${base}/dashboard/retainer?paid=1`;
+    // include the session id so the retainer page can reconcile even if the webhook is delayed/unset
+    successUrl = `${base}/dashboard/retainer?paid=1&session_id={CHECKOUT_SESSION_ID}`;
     cancelUrl = `${base}/dashboard/retainer?canceled=1`;
   } else if (body.paymentLinkToken && dbConfigured) {
     const rows = await query<{ id: string; amount_cents: number; description: string; token: string }>(

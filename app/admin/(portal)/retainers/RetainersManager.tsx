@@ -92,11 +92,29 @@ export default function RetainersManager({ retainers, projects, clients }: { ret
     router.refresh();
   }
 
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState("");
+  async function sync() {
+    setSyncing(true); setSyncMsg("");
+    const res = await fetch("/api/retainers/sync", { method: "POST" });
+    const data = await res.json().catch(() => ({}));
+    setSyncing(false);
+    if (!res.ok) { setSyncMsg(data.error || "Couldn't sync."); return; }
+    setSyncMsg(data.credited ? `Recorded ${data.credited} payment${data.credited === 1 ? "" : "s"}.` : "Already up to date.");
+    router.refresh();
+  }
+
   return (
     <>
       <div className="panels">
         <div className="card">
-          <div className="ct">Retainers <span className="badge b-mute">{retainers.length}</span></div>
+          <div className="ch" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <span className="ct" style={{ margin: 0 }}>Retainers <span className="badge b-mute">{retainers.length}</span></span>
+            <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              {syncMsg ? <span style={{ fontSize: ".78rem", color: "var(--grey-2)" }}>{syncMsg}</span> : null}
+              <button type="button" className="btn-o btn am-rowbtn" onClick={sync} disabled={syncing}>{syncing ? "Syncing…" : "Sync from Stripe"}</button>
+            </span>
+          </div>
           {retainers.length ? (
             <table>
               <tbody>

@@ -1,12 +1,21 @@
 import { getSession } from "@/lib/auth";
 import { getClientRetainer } from "@/lib/data";
+import { confirmRetainerSession } from "@/lib/retainer-credit";
 import ClientTop from "../../ClientTop";
 import RetainerPayButton from "../../RetainerPayButton";
 
 export const metadata = { title: "Retainer — StudioMVP" };
 
-export default async function RetainerPage() {
+export default async function RetainerPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ session_id?: string }>;
+}) {
   const session = await getSession();
+  // Just paid? Reconcile straight from Stripe so it reflects immediately,
+  // even if the webhook hasn't fired (or isn't configured).
+  const { session_id } = await searchParams;
+  if (session_id) await confirmRetainerSession(session_id);
   const r = await getClientRetainer(session?.userId);
 
   return (

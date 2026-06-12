@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import { dbConfigured, query } from "@/lib/db";
 import { getStripe, stripeConfigured } from "@/lib/stripe";
 import { dispatch } from "@/lib/automations";
+import { creditRetainerPayment } from "@/lib/retainer-credit";
 
 // Stripe needs the raw body to verify the signature.
 export const runtime = "nodejs";
@@ -29,29 +30,9 @@ export async function POST(req: Request) {
     const paymentLinkId = session.metadata?.paymentLinkId;
     const retainerId = session.metadata?.retainerId;
 
-    // Retainer period paid → record the payment + roll next-due forward.
+    // Retainer period paid → record the payment + roll next-due forward (idempotent).
     if (dbConfigured && retainerId) {
-      const r = await query<{ amount_cents: number; period: string; email: string | null; name: string | null }>(
-        `select r.amount_cents, r.period,
-                (select email from users u where u.id = r.client_id) as email,
-                (select name from users u where u.id = r.client_id) as name
-           from retainers r where r.id = $1`,
-        [retainerId]
-      );
-      if (r.length) {
-        await query(
-          `insert into retainer_payments (retainer_id, amount_cents, period_label, stripe_payment_intent)
-           select id, amount_cents, to_char(coalesce(next_due, current_date), 'FMMon YYYY'), $2 from retainers where id = $1`,
-          [retainerId, String(session.payment_intent ?? "")]
-        );
-        await query(
-          `update retainers set next_due = (greatest(coalesce(next_due, current_date), current_date)
-             + case period when 'yearly' then interval '1 year' when 'halfyearly' then interval '6 months' when 'quarterly' then interval '3 months' else interval '1 month' end)::date
-           where id = $1`,
-          [retainerId]
-        );
-        await dispatch("invoice.paid", { retainerId, reference: "retainer", email: r[0].email, name: r[0].name || "there" });
-      }
+      await creditRetainerPayment(retainerId, String(session.payment_intent ?? ""));
     }
 
     // Admin-generated payment link → mark it paid.
