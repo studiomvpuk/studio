@@ -32,6 +32,7 @@ export async function POST(req: Request) {
   const amountCents = Math.round(Number(b.amount) * 100);
   const period = PERIODS.includes(b.period) ? b.period : "monthly";
   const nextDue = isoDate(b.nextDue); // null → defaults to today in SQL
+  const taskAllowance = Math.max(0, Math.min(999, Math.round(Number(b.taskAllowance) || 0)));
 
   if (!Number.isFinite(amountCents) || amountCents < 100) {
     return NextResponse.json({ error: "Enter an amount of £1 or more." }, { status: 400 });
@@ -49,9 +50,9 @@ export async function POST(req: Request) {
   if (!client.length) return NextResponse.json({ error: "Client not found." }, { status: 404 });
 
   const rows = await query<{ id: string }>(
-    `insert into retainers (project_id, client_id, title, amount_cents, period, status, next_due)
-     values ($1,$2,$3,$4,$5,'active', coalesce($6::date, current_date)) returning id`,
-    [projectId || null, clientId, title, amountCents, period, nextDue]
+    `insert into retainers (project_id, client_id, title, amount_cents, period, status, next_due, task_allowance)
+     values ($1,$2,$3,$4,$5,'active', coalesce($6::date, current_date), $7) returning id`,
+    [projectId || null, clientId, title, amountCents, period, nextDue, taskAllowance]
   );
 
   // Tell the client their ongoing plan is set up + when the first payment is due.
@@ -92,6 +93,10 @@ export async function PATCH(req: Request) {
     const d = isoDate(b.nextDue);
     if (!d) return NextResponse.json({ error: "Enter a valid next-due date." }, { status: 400 });
     sets.push(`next_due = $${i++}`); vals.push(d);
+  }
+  if (b.taskAllowance !== undefined) {
+    const n = Math.max(0, Math.min(999, Math.round(Number(b.taskAllowance) || 0)));
+    sets.push(`task_allowance = $${i++}`); vals.push(n);
   }
 
   if (!sets.length) return NextResponse.json({ error: "Nothing to update." }, { status: 400 });

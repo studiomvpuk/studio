@@ -1,8 +1,9 @@
 import { getSession } from "@/lib/auth";
-import { getClientRetainer } from "@/lib/data";
+import { getClientRetainer, getRetainerTasks } from "@/lib/data";
 import { confirmRetainerSession } from "@/lib/retainer-credit";
 import ClientTop from "../../ClientTop";
 import RetainerPayButton from "../../RetainerPayButton";
+import TaskBoard from "@/app/components/TaskBoard";
 
 export const metadata = { title: "Retainer — StudioMVP" };
 
@@ -17,6 +18,7 @@ export default async function RetainerPage({
   const { session_id } = await searchParams;
   if (session_id) await confirmRetainerSession(session_id);
   const r = await getClientRetainer(session?.userId);
+  const tasks = r ? await getRetainerTasks(r.id) : [];
 
   return (
     <>
@@ -59,6 +61,10 @@ export default async function RetainerPage({
               ) : (
                 <div className="cl-empty" style={{ padding: 16 }}>No retainer payments yet.</div>
               )}
+            </div>
+
+            <div style={{ gridColumn: "1 / -1" }}>
+              <TaskBoard scope={{ retainerId: r.id }} role="client" initial={tasks} allowance={r.taskAllowance} />
             </div>
           </>
         )}

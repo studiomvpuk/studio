@@ -98,7 +98,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           </div>
 
           {/* TASKS (two-way board, shared with the client) */}
-          <TaskBoard projectId={p.id} role="admin" initial={tasks} />
+          <TaskBoard scope={{ projectId: p.id }} role="admin" initial={tasks} />
 
           {/* DOCUMENTS (admin manages → client sees) */}
           <ProjectDocuments projectId={p.id} initial={p.documents} />

@@ -150,6 +150,7 @@ create table if not exists retainers (
   period        text not null default 'monthly' check (period in ('monthly','quarterly','halfyearly','yearly')),
   status        text not null default 'active' check (status in ('active','paused','ended')),
   next_due      date,
+  task_allowance integer not null default 0,
   created_at    timestamptz not null default now()
 );
 create index if not exists retainers_client_idx on retainers (client_id);
@@ -165,7 +166,8 @@ create table if not exists retainer_payments (
 
 create table if not exists project_tasks (
   id            uuid primary key default gen_random_uuid(),
-  project_id    uuid not null references projects(id) on delete cascade,
+  project_id    uuid references projects(id) on delete cascade,
+  retainer_id   uuid references retainers(id) on delete cascade,
   title         text not null,
   detail        text,
   status        text not null default 'pending' check (status in ('pending','in_progress','done','confirmed')),
@@ -174,6 +176,7 @@ create table if not exists project_tasks (
   updated_at    timestamptz not null default now()
 );
 create index if not exists project_tasks_project_idx on project_tasks (project_id);
+create index if not exists project_tasks_retainer_idx on project_tasks (retainer_id);
 
 create table if not exists task_comments (
   id            uuid primary key default gen_random_uuid(),

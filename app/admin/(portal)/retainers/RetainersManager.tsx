@@ -1,12 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
+import TaskBoard from "@/app/components/TaskBoard";
+import type { ProjectTask } from "@/lib/data";
 
 type Retainer = {
   id: string; title: string; client: string; project: string;
   amount: string; period: string; status: string; statusLabel: string; badge: string;
   nextDue: string; nextDueISO: string; collected: string; projectId: string | null; amountCents: number; rawPeriod: string; rawStatus: string;
+  taskAllowance: number;
 };
 type ProjOpt = { id: string; label: string };
 
@@ -22,7 +25,7 @@ function useModal(onClose: () => void) {
 
 function EditModal({ r, onClose, onSaved }: { r: Retainer; onClose: () => void; onSaved: () => void }) {
   useModal(onClose);
-  const [f, setF] = useState({ title: r.title, amount: String(Math.round(r.amountCents / 100)), period: r.rawPeriod, status: r.rawStatus, nextDue: r.nextDueISO });
+  const [f, setF] = useState({ title: r.title, amount: String(Math.round(r.amountCents / 100)), period: r.rawPeriod, status: r.rawStatus, nextDue: r.nextDueISO, taskAllowance: String(r.taskAllowance) });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF((s) => ({ ...s, [k]: e.target.value }));
@@ -54,6 +57,8 @@ function EditModal({ r, onClose, onSaved }: { r: Retainer; onClose: () => void; 
           </select>
           <label>Next payment due</label>
           <input type="date" value={f.nextDue} onChange={set("nextDue")} />
+          <label>Tasks included <span style={{ color: "var(--grey-2)", fontWeight: 400 }}>(0 = unlimited)</span></label>
+          <input inputMode="numeric" value={f.taskAllowance} onChange={set("taskAllowance")} placeholder="0" />
           <label>Status</label>
           <select value={f.status} onChange={set("status")}>
             <option value="active">Active</option><option value="paused">Paused</option><option value="ended">Ended</option>
@@ -66,13 +71,14 @@ function EditModal({ r, onClose, onSaved }: { r: Retainer; onClose: () => void; 
   );
 }
 
-export default function RetainersManager({ retainers, projects, clients }: { retainers: Retainer[]; projects: ProjOpt[]; clients: ProjOpt[] }) {
+export default function RetainersManager({ retainers, projects, clients, tasksByRetainer }: { retainers: Retainer[]; projects: ProjOpt[]; clients: ProjOpt[]; tasksByRetainer: Record<string, ProjectTask[]> }) {
   const router = useRouter();
-  const empty = { clientId: "", projectId: "", title: "Ongoing retainer", amount: "", period: "monthly", nextDue: "" };
+  const empty = { clientId: "", projectId: "", title: "Ongoing retainer", amount: "", period: "monthly", nextDue: "", taskAllowance: "0" };
   const [create, setCreate] = useState(empty);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [edit, setEdit] = useState<Retainer | null>(null);
+  const [openTasks, setOpenTasks] = useState<Record<string, boolean>>({});
 
   const setC = (k: keyof typeof create) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setCreate((s) => ({ ...s, [k]: e.target.value }));
 
@@ -119,19 +125,36 @@ export default function RetainersManager({ retainers, projects, clients }: { ret
             <table>
               <tbody>
                 <tr><th>Client</th><th>Amount</th><th>Status</th><th>Next due</th><th>Collected</th><th></th></tr>
-                {retainers.map((r) => (
-                  <tr key={r.id}>
-                    <td><div className="pname">{r.client}</div><div style={{ fontSize: ".76rem", color: "var(--grey-2)" }}>{r.project}</div></td>
-                    <td>{r.amount}</td>
-                    <td><span className={`badge ${r.badge}`}>{r.statusLabel}</span></td>
-                    <td>{r.nextDue}</td>
-                    <td>{r.collected}</td>
-                    <td style={{ whiteSpace: "nowrap" }}>
-                      <button type="button" className="btn-o btn am-rowbtn" onClick={() => setEdit(r)}>Edit</button>
-                      <button type="button" className="btn-o btn am-rowbtn" onClick={() => del(r.id)}>Delete</button>
-                    </td>
-                  </tr>
-                ))}
+                {retainers.map((r) => {
+                  const tasks = tasksByRetainer[r.id] || [];
+                  const openCount = tasks.filter((t) => t.status !== "confirmed").length;
+                  const isOpen = !!openTasks[r.id];
+                  return (
+                    <Fragment key={r.id}>
+                      <tr>
+                        <td><div className="pname">{r.client}</div><div style={{ fontSize: ".76rem", color: "var(--grey-2)" }}>{r.project}</div></td>
+                        <td>{r.amount}</td>
+                        <td><span className={`badge ${r.badge}`}>{r.statusLabel}</span></td>
+                        <td>{r.nextDue}</td>
+                        <td>{r.collected}</td>
+                        <td style={{ whiteSpace: "nowrap" }}>
+                          <button type="button" className="btn-o btn am-rowbtn" onClick={() => setOpenTasks((s) => ({ ...s, [r.id]: !s[r.id] }))}>
+                            Tasks {r.taskAllowance > 0 ? `${openCount}/${r.taskAllowance}` : openCount ? `(${openCount})` : ""}
+                          </button>
+                          <button type="button" className="btn-o btn am-rowbtn" onClick={() => setEdit(r)}>Edit</button>
+                          <button type="button" className="btn-o btn am-rowbtn" onClick={() => del(r.id)}>Delete</button>
+                        </td>
+                      </tr>
+                      {isOpen && (
+                        <tr>
+                          <td colSpan={6} style={{ background: "var(--paper)" }}>
+                            <TaskBoard scope={{ retainerId: r.id }} role="admin" initial={tasks} allowance={r.taskAllowance} />
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
           ) : (
@@ -163,6 +186,8 @@ export default function RetainersManager({ retainers, projects, clients }: { ret
               </select>
               <label>First payment due <span style={{ color: "var(--grey-2)", fontWeight: 400 }}>(optional — defaults to today)</span></label>
               <input type="date" value={create.nextDue} onChange={setC("nextDue")} />
+              <label>Tasks included <span style={{ color: "var(--grey-2)", fontWeight: 400 }}>(0 = unlimited)</span></label>
+              <input inputMode="numeric" value={create.taskAllowance} onChange={setC("taskAllowance")} placeholder="0" />
               <button type="submit" className="btn" style={{ width: "100%", marginTop: 18 }} disabled={busy}>{busy ? "Creating…" : "Create retainer"}</button>
               {err ? <div style={{ marginTop: 10, fontSize: ".85rem", color: "var(--warn)" }}>{err}</div> : null}
             </form>

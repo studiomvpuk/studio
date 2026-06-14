@@ -403,8 +403,8 @@ const TASK_BADGE: Record<string, string> = {
   pending: "b-mute", in_progress: "b-info", done: "b-warn", confirmed: "b-ok",
 };
 
-export async function getProjectTasks(projectId: string): Promise<ProjectTask[]> {
-  if (!projectId) return [];
+async function fetchTasks(column: "project_id" | "retainer_id", id: string): Promise<ProjectTask[]> {
+  if (!id) return [];
   const rows = await safeQuery<{
     id: string; title: string; detail: string | null; status: ProjectTask["status"];
     created_by: "client" | "admin"; created_at: string;
@@ -415,9 +415,9 @@ export async function getProjectTasks(projectId: string): Promise<ProjectTask[]>
               select json_agg(json_build_object('author', c.author, 'body', c.body, 'created_at', c.created_at) order by c.created_at)
               from task_comments c where c.task_id = t.id
             ), '[]'::json) as comments
-       from project_tasks t where t.project_id = $1
+       from project_tasks t where t.${column} = $1
       order by case t.status when 'done' then 0 when 'in_progress' then 1 when 'pending' then 2 else 3 end, t.created_at desc`,
-    [projectId]
+    [id]
   );
   return rows.map((t) => ({
     id: t.id, title: t.title, detail: t.detail || "", status: t.status,
@@ -426,6 +426,12 @@ export async function getProjectTasks(projectId: string): Promise<ProjectTask[]>
     comments: (t.comments || []).map((c) => ({ author: c.author, body: c.body, when: dayMonth(c.created_at) })),
   }));
 }
+
+export const getProjectTasks = (projectId: string) => fetchTasks("project_id", projectId);
+export const getRetainerTasks = (retainerId: string) => fetchTasks("retainer_id", retainerId);
+
+// How many open (not-yet-confirmed) tasks count against a retainer's allowance.
+export const openTaskCount = (tasks: ProjectTask[]) => tasks.filter((t) => t.status !== "confirmed").length;
 
 /* ───────── PAYMENT LINKS ───────── */
 export async function getPaymentLink(token: string): Promise<{ description: string; amount: string; status: string; clientName: string | null } | null> {
@@ -463,13 +469,14 @@ export type RetainerRow = {
   amount: string; period: string; status: string; statusLabel: string; badge: string;
   nextDue: string; nextDueISO: string; collected: string;
   projectId: string | null; amountCents: number; rawPeriod: string; rawStatus: string;
+  taskAllowance: number;
 };
 export async function getRetainers(): Promise<{ live: boolean; rows: RetainerRow[] }> {
   const rows = await safeQuery<{
     id: string; title: string; amount_cents: number; period: string; status: string; next_due: string | null; next_due_iso: string | null;
-    project_id: string | null; client_name: string | null; client_email: string | null; project_name: string | null; collected: number;
+    project_id: string | null; client_name: string | null; client_email: string | null; project_name: string | null; collected: number; task_allowance: number;
   }>(`
-    select r.id, r.title, r.amount_cents, r.period, r.status, r.next_due,
+    select r.id, r.title, r.amount_cents, r.period, r.status, r.next_due, r.task_allowance,
            to_char(r.next_due, 'YYYY-MM-DD') as next_due_iso, r.project_id,
            (select name from users u where u.id = r.client_id) as client_name,
            (select email from users u where u.id = r.client_id) as client_email,
@@ -487,6 +494,7 @@ export async function getRetainers(): Promise<{ live: boolean; rows: RetainerRow
       nextDue: r.status === "active" ? dayMonthYear(r.next_due) : "—",
       nextDueISO: r.next_due_iso || "", collected: gbp(r.collected),
       projectId: r.project_id, amountCents: r.amount_cents, rawPeriod: r.period, rawStatus: r.status,
+      taskAllowance: r.task_allowance ?? 0,
     })),
   };
 }
@@ -509,12 +517,12 @@ export async function getClientOptions(): Promise<{ id: string; label: string }[
 
 export type ClientRetainer = {
   id: string; title: string; amount: string; period: string; status: string; statusLabel: string;
-  nextDue: string; active: boolean; payments: { amount: string; label: string; when: string }[];
+  nextDue: string; active: boolean; taskAllowance: number; payments: { amount: string; label: string; when: string }[];
 };
 export async function getClientRetainer(clientId?: string): Promise<ClientRetainer | null> {
   if (!clientId || !dbConfigured) return null;
-  const rows = await safeQuery<{ id: string; title: string; amount_cents: number; period: string; status: string; next_due: string | null }>(
-    `select id, title, amount_cents, period, status, next_due from retainers where client_id = $1 and status <> 'ended' order by created_at desc limit 1`,
+  const rows = await safeQuery<{ id: string; title: string; amount_cents: number; period: string; status: string; next_due: string | null; task_allowance: number }>(
+    `select id, title, amount_cents, period, status, next_due, task_allowance from retainers where client_id = $1 and status <> 'ended' order by created_at desc limit 1`,
     [clientId]
   );
   if (!rows.length) return null;
@@ -526,7 +534,7 @@ export async function getClientRetainer(clientId?: string): Promise<ClientRetain
   return {
     id: r.id, title: r.title, amount: `${gbp(r.amount_cents)}${periodSuffix[r.period] || ""}`,
     period: periodWord[r.period] || r.period, status: r.status, statusLabel: label(r.status),
-    nextDue: dayMonthYear(r.next_due), active: r.status === "active",
+    nextDue: dayMonthYear(r.next_due), active: r.status === "active", taskAllowance: r.task_allowance ?? 0,
     payments: pays.map((p) => ({ amount: gbp(p.amount_cents), label: p.period_label || "Retainer", when: dayMonth(p.paid_at) })),
   };
 }

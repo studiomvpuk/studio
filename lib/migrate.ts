@@ -125,6 +125,7 @@ create table if not exists retainers (
   period text not null default 'monthly' check (period in ('monthly','quarterly','halfyearly','yearly')),
   status text not null default 'active' check (status in ('active','paused','ended')),
   next_due date,
+  task_allowance integer not null default 0,
   created_at timestamptz not null default now()
 );
 create index if not exists retainers_client_idx on retainers (client_id);
@@ -140,7 +141,8 @@ create table if not exists retainer_payments (
 
 create table if not exists project_tasks (
   id uuid primary key default gen_random_uuid(),
-  project_id uuid not null references projects(id) on delete cascade,
+  project_id uuid references projects(id) on delete cascade,
+  retainer_id uuid references retainers(id) on delete cascade,
   title text not null,
   detail text,
   status text not null default 'pending' check (status in ('pending','in_progress','done','confirmed')),
@@ -149,6 +151,7 @@ create table if not exists project_tasks (
   updated_at timestamptz not null default now()
 );
 create index if not exists project_tasks_project_idx on project_tasks (project_id);
+create index if not exists project_tasks_retainer_idx on project_tasks (retainer_id);
 
 create table if not exists task_comments (
   id uuid primary key default gen_random_uuid(),
@@ -178,6 +181,11 @@ export function ensureSchema(): Promise<void> {
       // Widen the retainer period whitelist on databases created before half-yearly existed.
       await query(`alter table retainers drop constraint if exists retainers_period_check`);
       await query(`alter table retainers add constraint retainers_period_check check (period in ('monthly','quarterly','halfyearly','yearly'))`);
+      // Tasks can attach to a retainer (not just a project), and retainers carry a task allowance.
+      await query(`alter table retainers add column if not exists task_allowance integer not null default 0`);
+      await query(`alter table project_tasks alter column project_id drop not null`);
+      await query(`alter table project_tasks add column if not exists retainer_id uuid references retainers(id) on delete cascade`);
+      await query(`create index if not exists project_tasks_retainer_idx on project_tasks (retainer_id)`);
       await query(adminSeed());
       console.log("[migrate] schema ensured + admin seeded");
     })().catch((err) => {

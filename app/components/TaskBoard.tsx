@@ -11,8 +11,13 @@ type Task = {
 };
 
 export default function TaskBoard({
-  projectId, role, initial,
-}: { projectId: string; role: "client" | "admin"; initial: Task[] }) {
+  scope, role, initial, allowance = 0,
+}: {
+  scope: { projectId?: string; retainerId?: string };
+  role: "client" | "admin";
+  initial: Task[];
+  allowance?: number;
+}) {
   const router = useRouter();
   const [add, setAdd] = useState({ title: "", detail: "" });
   const [busy, setBusy] = useState(false);
@@ -22,13 +27,17 @@ export default function TaskBoard({
   const who = (a: "client" | "admin") =>
     a === role ? "You" : a === "admin" ? "StudioMVP" : "Client";
 
+  const openCount = initial.filter((t) => t.status !== "confirmed").length;
+  const capped = allowance > 0;
+  const atCap = capped && role === "client" && openCount >= allowance;
+
   async function create(e: React.FormEvent) {
     e.preventDefault();
     if (!add.title.trim()) { setErr("Add a short title."); return; }
     setBusy(true); setErr("");
     const res = await fetch("/api/tasks", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ projectId, title: add.title, detail: add.detail }),
+      body: JSON.stringify({ ...scope, title: add.title, detail: add.detail }),
     });
     const data = await res.json().catch(() => ({}));
     setBusy(false);
@@ -91,16 +100,27 @@ export default function TaskBoard({
 
   return (
     <div className="card">
-      <div className="tb-head"><span className="tb-h-t">Tasks &amp; requests</span><span className="badge b-mute">{initial.length}</span></div>
+      <div className="tb-head">
+        <span className="tb-h-t">Tasks &amp; requests</span>
+        {capped
+          ? <span className={`badge ${atCap ? "b-warn" : "b-mute"}`}>{openCount} / {allowance} used</span>
+          : <span className="badge b-mute">{initial.length}</span>}
+      </div>
 
-      <form className="tb-add" onSubmit={create}>
-        <input value={add.title} onChange={(e) => setAdd((v) => ({ ...v, title: e.target.value }))}
-          placeholder={role === "admin" ? "Add a task for this project…" : "What do you need us to do?"} />
-        <textarea value={add.detail} onChange={(e) => setAdd((v) => ({ ...v, detail: e.target.value }))}
-          placeholder="Add any detail (optional)" rows={2} />
-        <button type="submit" className="tb-btn" disabled={busy}>{busy ? "…" : "Add task"}</button>
-        {err ? <div className="tb-err">{err}</div> : null}
-      </form>
+      {atCap ? (
+        <div className="empty" style={{ padding: 14, marginBottom: 16 }}>
+          You&rsquo;ve used all {allowance} task{allowance === 1 ? "" : "s"} included in this retainer. Once one is confirmed complete a slot frees up — or ask us to add more.
+        </div>
+      ) : (
+        <form className="tb-add" onSubmit={create}>
+          <input value={add.title} onChange={(e) => setAdd((v) => ({ ...v, title: e.target.value }))}
+            placeholder={role === "admin" ? "Add a task…" : "What do you need us to do?"} />
+          <textarea value={add.detail} onChange={(e) => setAdd((v) => ({ ...v, detail: e.target.value }))}
+            placeholder="Add any detail (optional)" rows={2} />
+          <button type="submit" className="tb-btn" disabled={busy}>{busy ? "…" : "Add task"}</button>
+          {err ? <div className="tb-err">{err}</div> : null}
+        </form>
+      )}
 
       {initial.length ? (
         <div className="tb-list">

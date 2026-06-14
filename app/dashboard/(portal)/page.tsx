@@ -1,14 +1,16 @@
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
-import { getClientData } from "@/lib/data";
+import { getClientData, getProjectTasks } from "@/lib/data";
 import ClientTop from "../ClientTop";
 import NoProject from "../NoProject";
+import TaskBoard from "@/app/components/TaskBoard";
 
 export default async function ClientOverview() {
   const session = await getSession();
   const data = await getClientData(session?.userId);
   const firstName = (session?.name || "there").split(" ")[0];
   const pendingApprovals = data.approvals.filter((a) => a.status === "pending").length;
+  const tasks = data.projectId ? await getProjectTasks(data.projectId) : [];
 
   return (
     <>
@@ -93,6 +95,13 @@ export default async function ClientOverview() {
               </div>
               <Link href="/dashboard/timeline" className="link" style={{ display: "inline-block", marginTop: 14 }}>Full timeline →</Link>
             </div>
+
+            {/* TASKS (two-way board for this project) */}
+            {data.projectId ? (
+              <div style={{ gridColumn: "1 / -1" }}>
+                <TaskBoard scope={{ projectId: data.projectId }} role="client" initial={tasks} />
+              </div>
+            ) : null}
           </>
         )}
       </div>
