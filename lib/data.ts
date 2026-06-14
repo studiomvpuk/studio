@@ -389,6 +389,44 @@ export async function getClientData(clientId?: string): Promise<ClientData> {
   };
 }
 
+/* ───────── PROJECT TASKS (two-way request board) ───────── */
+export type TaskComment = { author: "client" | "admin"; body: string; when: string };
+export type ProjectTask = {
+  id: string; title: string; detail: string; status: "pending" | "in_progress" | "done" | "confirmed";
+  statusLabel: string; badge: string; createdBy: "client" | "admin"; when: string; comments: TaskComment[];
+};
+
+const TASK_LABELS: Record<string, string> = {
+  pending: "Pending", in_progress: "In progress", done: "Done — awaiting confirmation", confirmed: "Completed",
+};
+const TASK_BADGE: Record<string, string> = {
+  pending: "b-mute", in_progress: "b-info", done: "b-warn", confirmed: "b-ok",
+};
+
+export async function getProjectTasks(projectId: string): Promise<ProjectTask[]> {
+  if (!projectId) return [];
+  const rows = await safeQuery<{
+    id: string; title: string; detail: string | null; status: ProjectTask["status"];
+    created_by: "client" | "admin"; created_at: string;
+    comments: { author: "client" | "admin"; body: string; created_at: string }[];
+  }>(
+    `select t.id, t.title, t.detail, t.status, t.created_by, t.created_at,
+            coalesce((
+              select json_agg(json_build_object('author', c.author, 'body', c.body, 'created_at', c.created_at) order by c.created_at)
+              from task_comments c where c.task_id = t.id
+            ), '[]'::json) as comments
+       from project_tasks t where t.project_id = $1
+      order by case t.status when 'done' then 0 when 'in_progress' then 1 when 'pending' then 2 else 3 end, t.created_at desc`,
+    [projectId]
+  );
+  return rows.map((t) => ({
+    id: t.id, title: t.title, detail: t.detail || "", status: t.status,
+    statusLabel: TASK_LABELS[t.status] || t.status, badge: TASK_BADGE[t.status] || "b-mute",
+    createdBy: t.created_by, when: dayMonth(t.created_at),
+    comments: (t.comments || []).map((c) => ({ author: c.author, body: c.body, when: dayMonth(c.created_at) })),
+  }));
+}
+
 /* ───────── PAYMENT LINKS ───────── */
 export async function getPaymentLink(token: string): Promise<{ description: string; amount: string; status: string; clientName: string | null } | null> {
   const rows = await safeQuery<{ description: string; amount_cents: number; status: string; client_name: string | null }>(

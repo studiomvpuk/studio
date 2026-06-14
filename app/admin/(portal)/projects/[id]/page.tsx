@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getProjectDetail } from "@/lib/data";
+import { getProjectDetail, getProjectTasks } from "@/lib/data";
 import AdminTop from "../../../AdminTop";
 import PaymentTerms from "../../../PaymentTerms";
 import ProjectActions from "../../../ProjectActions";
 import ProjectDocuments from "../../../ProjectDocuments";
+import TaskBoard from "@/app/components/TaskBoard";
 import MessageThread from "@/app/components/MessageThread";
 
 export const metadata = { title: "Project — StudioMVP Admin" };
@@ -13,6 +14,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const { id } = await params;
   const p = await getProjectDetail(id);
   if (!p) notFound();
+  const tasks = await getProjectTasks(id);
 
   return (
     <>
@@ -94,6 +96,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               <div className="empty">No approvals requested yet.</div>
             )}
           </div>
+
+          {/* TASKS (two-way board, shared with the client) */}
+          <TaskBoard projectId={p.id} role="admin" initial={tasks} />
 
           {/* DOCUMENTS (admin manages → client sees) */}
           <ProjectDocuments projectId={p.id} initial={p.documents} />

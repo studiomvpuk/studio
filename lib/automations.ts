@@ -13,6 +13,9 @@ export type EventType =
   | "invoice.created"
   | "invoice.paid"
   | "retainer.created"
+  | "task.created"
+  | "task.done"
+  | "task.confirmed"
   | "project.activated"
   | "phase.completed"
   | "project.completed";
@@ -125,6 +128,67 @@ async function react(type: EventType, p: Record<string, unknown>): Promise<void>
             ],
             cta: { label: "View your plan & pay →", url: `${base()}/dashboard/retainer` },
             footnote: "Need to change anything? Just reply to this email and we'll sort it.",
+          }),
+        });
+      }
+      break;
+
+    case "task.created":
+      if (email) {
+        const who = String(p.who || "Someone");
+        const project = String(p.project || "your project");
+        const title = String(p.title || "a task");
+        await sendEmail({
+          to: email,
+          subject: `New task on ${project}: ${title}`,
+          html: renderEmail({
+            preheader: `${who} added "${title}" to ${project}.`,
+            heading: "A new task was added",
+            intro: `Hi ${name},`,
+            paragraphs: [
+              `${who} added <strong>${title}</strong> to <strong>${project}</strong>.`,
+              "Open the project board to set it in progress, leave a comment, or mark it done when it's complete.",
+            ],
+            cta: { label: "Open the project board →", url: `${base()}/dashboard/tasks` },
+          }),
+        });
+      }
+      break;
+
+    case "task.done":
+      if (email) {
+        const project = String(p.project || "your project");
+        const title = String(p.title || "your task");
+        await sendEmail({
+          to: email,
+          subject: `Done — please confirm: ${title}`,
+          html: renderEmail({
+            preheader: `We've completed "${title}". Please review and confirm.`,
+            heading: "We've marked a task done",
+            intro: `Hi ${name},`,
+            paragraphs: [
+              `We've completed <strong>${title}</strong> on <strong>${project}</strong>.`,
+              "Please take a look and confirm it's all good — or leave a comment if anything still needs a tweak.",
+            ],
+            cta: { label: "Review & confirm →", url: `${base()}/dashboard/tasks` },
+          }),
+        });
+      }
+      break;
+
+    case "task.confirmed":
+      if (email) {
+        const who = String(p.who || "The client");
+        const project = String(p.project || "a project");
+        const title = String(p.title || "a task");
+        await sendEmail({
+          to: email,
+          subject: `Confirmed complete: ${title}`,
+          html: renderEmail({
+            preheader: `${who} confirmed "${title}" is complete.`,
+            heading: "A task was confirmed complete",
+            intro: `Hi ${name},`,
+            paragraphs: [`${who} confirmed <strong>${title}</strong> on <strong>${project}</strong> is complete. Nothing further needed.`],
           }),
         });
       }

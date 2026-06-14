@@ -137,6 +137,27 @@ create table if not exists retainer_payments (
   stripe_payment_intent text,
   paid_at timestamptz not null default now()
 );
+
+create table if not exists project_tasks (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid not null references projects(id) on delete cascade,
+  title text not null,
+  detail text,
+  status text not null default 'pending' check (status in ('pending','in_progress','done','confirmed')),
+  created_by text not null default 'client' check (created_by in ('client','admin')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists project_tasks_project_idx on project_tasks (project_id);
+
+create table if not exists task_comments (
+  id uuid primary key default gen_random_uuid(),
+  task_id uuid not null references project_tasks(id) on delete cascade,
+  author text not null check (author in ('client','admin')),
+  body text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists task_comments_task_idx on task_comments (task_id);
 `;
 
 // The admin account is created automatically. Override the email with ADMIN_EMAIL.
