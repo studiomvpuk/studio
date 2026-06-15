@@ -10,6 +10,7 @@
     "db:setup": "node scripts/db-setup.mjs"
   },
   "dependencies": {
+    "aws4fetch": "^1.0.20",
     "jose": "^5.9.6",
     "next": "^15.1.0",
     "pg": "^8.13.1",

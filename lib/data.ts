@@ -390,10 +390,10 @@ export async function getClientData(clientId?: string): Promise<ClientData> {
 }
 
 /* ───────── PROJECT TASKS (two-way request board) ───────── */
-export type TaskComment = { author: "client" | "admin"; body: string; when: string };
+export type TaskComment = { author: "client" | "admin"; body: string; when: string; image: string | null };
 export type ProjectTask = {
   id: string; title: string; detail: string; status: "pending" | "in_progress" | "done" | "confirmed";
-  statusLabel: string; badge: string; createdBy: "client" | "admin"; when: string; comments: TaskComment[];
+  statusLabel: string; badge: string; createdBy: "client" | "admin"; when: string; image: string | null; comments: TaskComment[];
 };
 
 const TASK_LABELS: Record<string, string> = {
@@ -407,23 +407,28 @@ async function fetchTasks(column: "project_id" | "retainer_id", id: string): Pro
   if (!id) return [];
   const rows = await safeQuery<{
     id: string; title: string; detail: string | null; status: ProjectTask["status"];
-    created_by: "client" | "admin"; created_at: string;
-    comments: { author: "client" | "admin"; body: string; created_at: string }[];
+    created_by: "client" | "admin"; created_at: string; image_id: string | null;
+    comments: { author: "client" | "admin"; body: string; created_at: string; image_id: string | null }[];
   }>(
     `select t.id, t.title, t.detail, t.status, t.created_by, t.created_at,
+            (select id from task_attachments a where a.task_id = t.id order by a.created_at limit 1) as image_id,
             coalesce((
-              select json_agg(json_build_object('author', c.author, 'body', c.body, 'created_at', c.created_at) order by c.created_at)
+              select json_agg(json_build_object(
+                       'author', c.author, 'body', c.body, 'created_at', c.created_at,
+                       'image_id', (select id from task_attachments a where a.comment_id = c.id order by a.created_at limit 1)
+                     ) order by c.created_at)
               from task_comments c where c.task_id = t.id
             ), '[]'::json) as comments
        from project_tasks t where t.${column} = $1
       order by case t.status when 'done' then 0 when 'in_progress' then 1 when 'pending' then 2 else 3 end, t.created_at desc`,
     [id]
   );
+  const url = (aid: string | null) => (aid ? `/api/attachments/${aid}` : null);
   return rows.map((t) => ({
     id: t.id, title: t.title, detail: t.detail || "", status: t.status,
     statusLabel: TASK_LABELS[t.status] || t.status, badge: TASK_BADGE[t.status] || "b-mute",
-    createdBy: t.created_by, when: dayMonth(t.created_at),
-    comments: (t.comments || []).map((c) => ({ author: c.author, body: c.body, when: dayMonth(c.created_at) })),
+    createdBy: t.created_by, when: dayMonth(t.created_at), image: url(t.image_id),
+    comments: (t.comments || []).map((c) => ({ author: c.author, body: c.body, when: dayMonth(c.created_at), image: url(c.image_id) })),
   }));
 }
 

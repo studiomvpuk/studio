@@ -647,3 +647,14 @@ a { color: inherit; text-decoration: none; }
 .tb-comment { display: flex; gap: 8px; flex: 1; min-width: 200px; }
 .tb-comment input { flex: 1; border: 1px solid var(--hair); border-radius: 9px; padding: 9px 12px; font-family: var(--body); font-size: .86rem; color: var(--ink); outline: none; background: #fff; }
 .tb-comment input:focus { border-color: var(--ink); }
+
+/* task board — image attachments */
+.tb-addrow { display: flex; gap: 8px; align-items: center; }
+.tb-file { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.tb-attach { display: flex; align-items: center; gap: 12px; margin: 4px 0 2px; }
+.tb-attach img { width: 84px; height: 84px; object-fit: cover; border-radius: 10px; border: 1px solid var(--hair); }
+.tb-attach.sm img { width: 64px; height: 64px; }
+.tb-x { background: none; border: none; color: var(--grey-2); font-size: .8rem; cursor: pointer; text-decoration: underline; }
+.tb-img { display: inline-block; margin: 10px 0 2px; }
+.tb-img img { max-width: 260px; max-height: 220px; border-radius: 12px; border: 1px solid var(--hair); display: block; }
+.tb-img.sm img { max-width: 180px; max-height: 150px; border-radius: 9px; }

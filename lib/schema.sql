@@ -186,3 +186,14 @@ create table if not exists task_comments (
   created_at    timestamptz not null default now()
 );
 create index if not exists task_comments_task_idx on task_comments (task_id);
+
+create table if not exists task_attachments (
+  id            uuid primary key default gen_random_uuid(),
+  task_id       uuid references project_tasks(id) on delete cascade,
+  comment_id    uuid references task_comments(id) on delete cascade,
+  mime          text not null,
+  r2_key        text not null,
+  created_at    timestamptz not null default now()
+);
+create index if not exists task_attachments_task_idx on task_attachments (task_id);
+create index if not exists task_attachments_comment_idx on task_attachments (comment_id);

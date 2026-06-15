@@ -3,6 +3,7 @@ import { query } from "@/lib/db";
 import { dispatch } from "@/lib/automations";
 import { authorizeOwner, isDenied } from "@/lib/task-access";
 import { periodStartExpr, periodWord } from "@/lib/data";
+import { uploadImage, isUploadError } from "@/lib/attachments";
 
 const ADMIN_EMAIL = () => process.env.ADMIN_EMAIL || "officialstudiomvp@gmail.com";
 
@@ -67,11 +68,18 @@ export async function POST(req: Request) {
     }
   }
 
+  // Validate + upload any attached image before creating the task.
+  const img = await uploadImage(b.image);
+  if (isUploadError(img)) return NextResponse.json({ error: img.error }, { status: img.status });
+
   const rows = await query<{ id: string }>(
     `insert into project_tasks (project_id, retainer_id, title, detail, created_by, status)
      values ($1,$2,$3,$4,$5,'pending') returning id`,
     [projectId, retainerId, title, detail || null, auth.role]
   );
+  if (img) {
+    await query(`insert into task_attachments (task_id, mime, r2_key) values ($1,$2,$3)`, [rows[0].id, img.mime, img.key]);
+  }
 
   const meta = await scopeMeta(projectId, retainerId);
   if (meta) {
