@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { dispatch } from "@/lib/automations";
 import { authorizeOwner, isDenied } from "@/lib/task-access";
+import { periodStartExpr, periodWord } from "@/lib/data";
 
 const ADMIN_EMAIL = () => process.env.ADMIN_EMAIL || "officialstudiomvp@gmail.com";
 
@@ -42,18 +43,24 @@ export async function POST(req: Request) {
   const auth = await authorizeOwner({ projectId, retainerId });
   if (isDenied(auth)) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  // Enforce the retainer's task allowance — but only for the client's own additions.
+  // Enforce the retainer's per-period task allowance — only for the client's own
+  // additions. The allowance resets every billing period (e.g. N tasks per month).
   if (retainerId && auth.role === "client") {
-    const cap = await query<{ task_allowance: number }>(`select task_allowance from retainers where id = $1`, [retainerId]);
+    const cap = await query<{ task_allowance: number; period: string }>(
+      `select task_allowance, period from retainers where id = $1`, [retainerId]
+    );
     const allowance = cap[0]?.task_allowance ?? 0;
     if (allowance > 0) {
-      const open = await query<{ n: string }>(
-        `select count(*) as n from project_tasks where retainer_id = $1 and status <> 'confirmed'`,
+      const period = cap[0].period;
+      const used = await query<{ n: string }>(
+        `select count(*) as n from project_tasks
+          where retainer_id = $1 and created_by = 'client' and created_at >= ${periodStartExpr(period)}`,
         [retainerId]
       );
-      if (Number(open[0]?.n || 0) >= allowance) {
+      if (Number(used[0]?.n || 0) >= allowance) {
+        const word = periodWord[period] || "period";
         return NextResponse.json(
-          { error: `This retainer includes ${allowance} open task${allowance === 1 ? "" : "s"}. Close one out, or ask the team to add more.` },
+          { error: `This retainer includes ${allowance} task${allowance === 1 ? "" : "s"} per ${word}. You've used them all this ${word} — they reset next ${word}, or ask the team to add more.` },
           { status: 403 }
         );
       }

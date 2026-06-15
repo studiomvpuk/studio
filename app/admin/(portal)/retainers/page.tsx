@@ -1,4 +1,4 @@
-import { getRetainers, getProjectOptions, getClientOptions, getRetainerTasks, type ProjectTask } from "@/lib/data";
+import { getRetainers, getProjectOptions, getClientOptions, getRetainerTasks, getRetainerTaskUsage, type ProjectTask } from "@/lib/data";
 import AdminTop from "../../AdminTop";
 import RetainersManager from "./RetainersManager";
 
@@ -8,15 +8,17 @@ export default async function RetainersPage() {
   const { live, rows } = await getRetainers();
   const [projects, clients] = await Promise.all([getProjectOptions(), getClientOptions()]);
 
-  // Tasks for each retainer, so the admin can manage them inline (no extra page).
+  // Tasks + this-period usage for each retainer, so the admin can manage them inline (no extra page).
   const taskLists = await Promise.all(rows.map((r) => getRetainerTasks(r.id)));
+  const usages = await Promise.all(rows.map((r) => getRetainerTaskUsage(r.id, r.rawPeriod)));
   const tasksByRetainer: Record<string, ProjectTask[]> = {};
-  rows.forEach((r, i) => { tasksByRetainer[r.id] = taskLists[i]; });
+  const usageByRetainer: Record<string, number> = {};
+  rows.forEach((r, i) => { tasksByRetainer[r.id] = taskLists[i]; usageByRetainer[r.id] = usages[i]; });
 
   return (
     <>
       <AdminTop title="Retainers" live={live} />
-      <RetainersManager retainers={rows} projects={projects} clients={clients} tasksByRetainer={tasksByRetainer} />
+      <RetainersManager retainers={rows} projects={projects} clients={clients} tasksByRetainer={tasksByRetainer} usageByRetainer={usageByRetainer} />
     </>
   );
 }

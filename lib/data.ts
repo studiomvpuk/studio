@@ -430,8 +430,27 @@ async function fetchTasks(column: "project_id" | "retainer_id", id: string): Pro
 export const getProjectTasks = (projectId: string) => fetchTasks("project_id", projectId);
 export const getRetainerTasks = (retainerId: string) => fetchTasks("retainer_id", retainerId);
 
-// How many open (not-yet-confirmed) tasks count against a retainer's allowance.
-export const openTaskCount = (tasks: ProjectTask[]) => tasks.filter((t) => t.status !== "confirmed").length;
+// SQL expression for the start of the retainer's current billing period — the
+// allowance is per-period (e.g. "N tasks per month") and resets each period.
+export function periodStartExpr(period: string): string {
+  switch (period) {
+    case "yearly": return `date_trunc('year', now())`;
+    case "halfyearly": return `(date_trunc('year', now()) + case when extract(month from now()) > 6 then interval '6 months' else interval '0 months' end)`;
+    case "quarterly": return `date_trunc('quarter', now())`;
+    default: return `date_trunc('month', now())`;
+  }
+}
+
+// How many tasks the client has raised against this retainer in the current period.
+export async function getRetainerTaskUsage(retainerId: string, period: string): Promise<number> {
+  if (!retainerId || !dbConfigured) return 0;
+  const rows = await safeQuery<{ n: string }>(
+    `select count(*) as n from project_tasks
+      where retainer_id = $1 and created_by = 'client' and created_at >= ${periodStartExpr(period)}`,
+    [retainerId]
+  );
+  return Number(rows[0]?.n || 0);
+}
 
 /* ───────── PAYMENT LINKS ───────── */
 export async function getPaymentLink(token: string): Promise<{ description: string; amount: string; status: string; clientName: string | null } | null> {
@@ -516,7 +535,7 @@ export async function getClientOptions(): Promise<{ id: string; label: string }[
 }
 
 export type ClientRetainer = {
-  id: string; title: string; amount: string; period: string; status: string; statusLabel: string;
+  id: string; title: string; amount: string; period: string; rawPeriod: string; status: string; statusLabel: string;
   nextDue: string; active: boolean; taskAllowance: number; payments: { amount: string; label: string; when: string }[];
 };
 export async function getClientRetainer(clientId?: string): Promise<ClientRetainer | null> {
@@ -533,7 +552,7 @@ export async function getClientRetainer(clientId?: string): Promise<ClientRetain
   );
   return {
     id: r.id, title: r.title, amount: `${gbp(r.amount_cents)}${periodSuffix[r.period] || ""}`,
-    period: periodWord[r.period] || r.period, status: r.status, statusLabel: label(r.status),
+    period: periodWord[r.period] || r.period, rawPeriod: r.period, status: r.status, statusLabel: label(r.status),
     nextDue: dayMonthYear(r.next_due), active: r.status === "active", taskAllowance: r.task_allowance ?? 0,
     payments: pays.map((p) => ({ amount: gbp(p.amount_cents), label: p.period_label || "Retainer", when: dayMonth(p.paid_at) })),
   };

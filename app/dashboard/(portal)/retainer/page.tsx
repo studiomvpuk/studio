@@ -1,5 +1,5 @@
 import { getSession } from "@/lib/auth";
-import { getClientRetainer, getRetainerTasks } from "@/lib/data";
+import { getClientRetainer, getRetainerTasks, getRetainerTaskUsage } from "@/lib/data";
 import { confirmRetainerSession } from "@/lib/retainer-credit";
 import ClientTop from "../../ClientTop";
 import RetainerPayButton from "../../RetainerPayButton";
@@ -19,6 +19,7 @@ export default async function RetainerPage({
   if (session_id) await confirmRetainerSession(session_id);
   const r = await getClientRetainer(session?.userId);
   const tasks = r ? await getRetainerTasks(r.id) : [];
+  const used = r ? await getRetainerTaskUsage(r.id, r.rawPeriod) : 0;
 
   return (
     <>
@@ -64,7 +65,7 @@ export default async function RetainerPage({
             </div>
 
             <div style={{ gridColumn: "1 / -1" }}>
-              <TaskBoard scope={{ retainerId: r.id }} role="client" initial={tasks} allowance={r.taskAllowance} />
+              <TaskBoard scope={{ retainerId: r.id }} role="client" initial={tasks} allowance={r.taskAllowance} used={used} periodWord={r.period} />
             </div>
           </>
         )}

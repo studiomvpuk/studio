@@ -11,12 +11,14 @@ type Task = {
 };
 
 export default function TaskBoard({
-  scope, role, initial, allowance = 0,
+  scope, role, initial, allowance = 0, used = 0, periodWord = "period",
 }: {
   scope: { projectId?: string; retainerId?: string };
   role: "client" | "admin";
   initial: Task[];
   allowance?: number;
+  used?: number;          // tasks the client has raised this billing period
+  periodWord?: string;    // "month" | "quarter" | …
 }) {
   const router = useRouter();
   const [add, setAdd] = useState({ title: "", detail: "" });
@@ -27,9 +29,8 @@ export default function TaskBoard({
   const who = (a: "client" | "admin") =>
     a === role ? "You" : a === "admin" ? "StudioMVP" : "Client";
 
-  const openCount = initial.filter((t) => t.status !== "confirmed").length;
-  const capped = allowance > 0;
-  const atCap = capped && role === "client" && openCount >= allowance;
+  const capped = allowance > 0;            // retainer with a per-period task allowance
+  const atCap = capped && role === "client" && used >= allowance;
 
   async function create(e: React.FormEvent) {
     e.preventDefault();
@@ -103,13 +104,13 @@ export default function TaskBoard({
       <div className="tb-head">
         <span className="tb-h-t">Tasks &amp; requests</span>
         {capped
-          ? <span className={`badge ${atCap ? "b-warn" : "b-mute"}`}>{openCount} / {allowance} used</span>
+          ? <span className={`badge ${atCap ? "b-warn" : "b-mute"}`}>{used} / {allowance} this {periodWord}</span>
           : <span className="badge b-mute">{initial.length}</span>}
       </div>
 
       {atCap ? (
         <div className="empty" style={{ padding: 14, marginBottom: 16 }}>
-          You&rsquo;ve used all {allowance} task{allowance === 1 ? "" : "s"} included in this retainer. Once one is confirmed complete a slot frees up — or ask us to add more.
+          You&rsquo;ve used all {allowance} task{allowance === 1 ? "" : "s"} included this {periodWord}. Your allowance resets next {periodWord} — or ask us to add more.
         </div>
       ) : (
         <form className="tb-add" onSubmit={create}>

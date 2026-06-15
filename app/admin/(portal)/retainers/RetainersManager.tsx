@@ -71,7 +71,7 @@ function EditModal({ r, onClose, onSaved }: { r: Retainer; onClose: () => void; 
   );
 }
 
-export default function RetainersManager({ retainers, projects, clients, tasksByRetainer }: { retainers: Retainer[]; projects: ProjOpt[]; clients: ProjOpt[]; tasksByRetainer: Record<string, ProjectTask[]> }) {
+export default function RetainersManager({ retainers, projects, clients, tasksByRetainer, usageByRetainer }: { retainers: Retainer[]; projects: ProjOpt[]; clients: ProjOpt[]; tasksByRetainer: Record<string, ProjectTask[]>; usageByRetainer: Record<string, number> }) {
   const router = useRouter();
   const empty = { clientId: "", projectId: "", title: "Ongoing retainer", amount: "", period: "monthly", nextDue: "", taskAllowance: "0" };
   const [create, setCreate] = useState(empty);
@@ -127,7 +127,7 @@ export default function RetainersManager({ retainers, projects, clients, tasksBy
                 <tr><th>Client</th><th>Amount</th><th>Status</th><th>Next due</th><th>Collected</th><th></th></tr>
                 {retainers.map((r) => {
                   const tasks = tasksByRetainer[r.id] || [];
-                  const openCount = tasks.filter((t) => t.status !== "confirmed").length;
+                  const used = usageByRetainer[r.id] || 0;
                   const isOpen = !!openTasks[r.id];
                   return (
                     <Fragment key={r.id}>
@@ -139,7 +139,7 @@ export default function RetainersManager({ retainers, projects, clients, tasksBy
                         <td>{r.collected}</td>
                         <td style={{ whiteSpace: "nowrap" }}>
                           <button type="button" className="btn-o btn am-rowbtn" onClick={() => setOpenTasks((s) => ({ ...s, [r.id]: !s[r.id] }))}>
-                            Tasks {r.taskAllowance > 0 ? `${openCount}/${r.taskAllowance}` : openCount ? `(${openCount})` : ""}
+                            Tasks {r.taskAllowance > 0 ? `${used}/${r.taskAllowance}` : tasks.length ? `(${tasks.length})` : ""}
                           </button>
                           <button type="button" className="btn-o btn am-rowbtn" onClick={() => setEdit(r)}>Edit</button>
                           <button type="button" className="btn-o btn am-rowbtn" onClick={() => del(r.id)}>Delete</button>
@@ -148,7 +148,7 @@ export default function RetainersManager({ retainers, projects, clients, tasksBy
                       {isOpen && (
                         <tr>
                           <td colSpan={6} style={{ background: "var(--paper)" }}>
-                            <TaskBoard scope={{ retainerId: r.id }} role="admin" initial={tasks} allowance={r.taskAllowance} />
+                            <TaskBoard scope={{ retainerId: r.id }} role="admin" initial={tasks} allowance={r.taskAllowance} used={used} periodWord={r.period} />
                           </td>
                         </tr>
                       )}
