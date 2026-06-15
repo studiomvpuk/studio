@@ -151,7 +151,9 @@ create table if not exists project_tasks (
   updated_at timestamptz not null default now()
 );
 create index if not exists project_tasks_project_idx on project_tasks (project_id);
-create index if not exists project_tasks_retainer_idx on project_tasks (retainer_id);
+-- NOTE: the project_tasks_retainer_idx index is created in the incremental
+-- migration block below, AFTER the retainer_id column is guaranteed to exist —
+-- on pre-existing databases the column isn't added by "create table if not exists".
 
 create table if not exists task_comments (
   id uuid primary key default gen_random_uuid(),
@@ -178,15 +180,21 @@ export function ensureSchema(): Promise<void> {
   if (!ran) {
     ran = (async () => {
       await query(SCHEMA);
-      // Widen the retainer period whitelist on databases created before half-yearly existed.
-      await query(`alter table retainers drop constraint if exists retainers_period_check`);
-      await query(`alter table retainers add constraint retainers_period_check check (period in ('monthly','quarterly','halfyearly','yearly'))`);
-      // Tasks can attach to a retainer (not just a project), and retainers carry a task allowance.
-      await query(`alter table retainers add column if not exists task_allowance integer not null default 0`);
-      await query(`alter table project_tasks alter column project_id drop not null`);
-      await query(`alter table project_tasks add column if not exists retainer_id uuid references retainers(id) on delete cascade`);
-      await query(`create index if not exists project_tasks_retainer_idx on project_tasks (retainer_id)`);
       await query(adminSeed());
+      // Incremental migrations for databases created before a column/constraint existed.
+      // Best-effort + ordered: a single failure here must never block auth or the rest.
+      const steps: [string, string][] = [
+        ["retainer period whitelist (drop)", `alter table retainers drop constraint if exists retainers_period_check`],
+        ["retainer period whitelist (add)", `alter table retainers add constraint retainers_period_check check (period in ('monthly','quarterly','halfyearly','yearly'))`],
+        ["retainer task_allowance", `alter table retainers add column if not exists task_allowance integer not null default 0`],
+        ["project_tasks.project_id nullable", `alter table project_tasks alter column project_id drop not null`],
+        ["project_tasks.retainer_id", `alter table project_tasks add column if not exists retainer_id uuid references retainers(id) on delete cascade`],
+        ["project_tasks retainer index", `create index if not exists project_tasks_retainer_idx on project_tasks (retainer_id)`],
+      ];
+      for (const [name, sql] of steps) {
+        try { await query(sql); }
+        catch (e) { console.warn(`[migrate] step "${name}" skipped:`, (e as Error).message); }
+      }
       console.log("[migrate] schema ensured + admin seeded");
     })().catch((err) => {
       ran = null; // allow retry on next request
