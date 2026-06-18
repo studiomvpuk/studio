@@ -658,3 +658,20 @@ a { color: inherit; text-decoration: none; }
 .tb-img { display: inline-block; margin: 10px 0 2px; }
 .tb-img img { max-width: 260px; max-height: 220px; border-radius: 12px; border: 1px solid var(--hair); display: block; }
 .tb-img.sm img { max-width: 180px; max-height: 150px; border-radius: 9px; }
+
+/* ───────── Mobile: stop iOS auto-zoom + reflow the task board ───────── */
+@media (max-width: 768px) {
+  /* iOS Safari zooms the page when a focused field has font-size < 16px.
+     Force every text field to 16px on small screens (overrides component rules). */
+  input:not([type=checkbox]):not([type=radio]):not([type=range]),
+  textarea, select { font-size: 16px !important; }
+
+  /* task board reflows to a single column so nothing overflows */
+  .tb-foot { flex-direction: column; align-items: stretch; gap: 12px; }
+  .tb-actions { width: 100%; }
+  .tb-actions .tb-btn { flex: 1 1 auto; }
+  .tb-comment { min-width: 0; width: 100%; }
+  .tb-addrow { flex-wrap: wrap; }
+  .tb-img img, .tb-img.sm img { max-width: 100%; height: auto; }
+  .tb-task { padding: 14px; }
+}
