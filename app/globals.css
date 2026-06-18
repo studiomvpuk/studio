@@ -629,24 +629,29 @@ a { color: inherit; text-decoration: none; }
 .tb-btn.ghost { background: #fff; color: var(--ink); border: 1px solid var(--hair); }
 
 .tb-list { display: grid; gap: 14px; }
-.tb-task { border: 1px solid var(--hair); border-radius: 14px; padding: 16px 18px; background: var(--paper); }
+/* min-width:0 lets the card shrink inside its grid/flex parent instead of
+   forcing the whole page to scroll sideways; overflow-wrap breaks long words/URLs */
+.tb-task { border: 1px solid var(--hair); border-radius: 14px; padding: 16px 18px; background: var(--paper); min-width: 0; overflow: hidden; }
 .tb-task.st-done { border-color: var(--warn); }
 .tb-task.st-confirmed { opacity: .72; }
-.tb-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-.tb-title { font-weight: 600; color: var(--ink); font-size: 1rem; }
-.tb-detail { color: var(--grey); font-size: .9rem; margin-top: 4px; line-height: 1.5; white-space: pre-wrap; }
+.tb-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; min-width: 0; }
+.tb-top > div { min-width: 0; }
+.tb-title { font-weight: 600; color: var(--ink); font-size: 1rem; overflow-wrap: anywhere; }
+.tb-detail { color: var(--grey); font-size: .9rem; margin-top: 4px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
 .tb-meta { color: var(--grey-2); font-size: .74rem; margin-top: 6px; }
 
-.tb-thread { display: grid; gap: 8px; margin: 14px 0 4px; padding-left: 12px; border-left: 2px solid var(--hair); }
+.tb-thread { display: grid; gap: 8px; margin: 14px 0 4px; padding-left: 12px; border-left: 2px solid var(--hair); min-width: 0; }
+.tb-c { min-width: 0; }
 .tb-c-who { font-size: .72rem; color: var(--grey-2); font-weight: 600; }
-.tb-c-body { font-size: .9rem; color: var(--ink); line-height: 1.5; white-space: pre-wrap; }
+.tb-c-body { font-size: .9rem; color: var(--ink); line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
 .tb-c.mine .tb-c-who { color: var(--ink); }
 
-.tb-foot { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.tb-foot { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; justify-content: space-between; min-width: 0; }
 .tb-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.tb-comment { display: flex; gap: 8px; flex: 1; min-width: 200px; }
-.tb-comment input { flex: 1; border: 1px solid var(--hair); border-radius: 9px; padding: 9px 12px; font-family: var(--body); font-size: .86rem; color: var(--ink); outline: none; background: #fff; }
-.tb-comment input:focus { border-color: var(--ink); }
+.tb-comment { display: flex; gap: 8px; flex: 1 1 240px; min-width: 0; align-items: flex-end; }
+/* a growing textarea so a long comment wraps and stays visible — never a sideways scroll */
+.tb-comment textarea { flex: 1; min-width: 0; width: 100%; border: 1px solid var(--hair); border-radius: 9px; padding: 9px 12px; font-family: var(--body); font-size: .86rem; color: var(--ink); outline: none; background: #fff; resize: none; line-height: 1.45; max-height: 140px; overflow-y: auto; }
+.tb-comment textarea:focus { border-color: var(--ink); }
 
 /* task board — image attachments */
 .tb-addrow { display: flex; gap: 8px; align-items: center; }

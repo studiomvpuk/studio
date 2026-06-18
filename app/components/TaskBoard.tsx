@@ -43,6 +43,14 @@ export default function TaskBoard({
   const [comment, setComment] = useState<Record<string, string>>({});
   const [commentImg, setCommentImg] = useState<Record<string, string>>({});
   const addFileRef = useRef<HTMLInputElement>(null);
+  const taRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
+
+  // Grow the comment textarea to fit its content (so text wraps in view, no sideways scroll).
+  const grow = (el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 140) + "px";
+  };
 
   const who = (a: "client" | "admin") =>
     a === role ? "You" : a === "admin" ? "StudioMVP" : "Client";
@@ -109,6 +117,7 @@ export default function TaskBoard({
     if (!res.ok) { const d = await res.json().catch(() => ({})); setErr(d.error || "Couldn't send."); return; }
     setComment((c) => ({ ...c, [id]: "" }));
     setCommentImg((m) => ({ ...m, [id]: "" }));
+    const el = taRefs.current[id]; if (el) el.style.height = "auto"; // shrink back to one row
     router.refresh();
   }
 
@@ -210,8 +219,14 @@ export default function TaskBoard({
               <div className="tb-foot">
                 {actions(t)}
                 <div className="tb-comment">
-                  <input value={comment[t.id] || ""} onChange={(e) => setComment((c) => ({ ...c, [t.id]: e.target.value }))}
-                    placeholder="Add a comment…" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); send(t.id); } }} />
+                  <textarea
+                    ref={(el) => { taRefs.current[t.id] = el; }}
+                    value={comment[t.id] || ""}
+                    rows={1}
+                    placeholder="Add a comment…"
+                    onChange={(e) => { setComment((c) => ({ ...c, [t.id]: e.target.value })); grow(e.target); }}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(t.id); } }}
+                  />
                   <label className="tb-btn ghost tb-file" title="Attach image">
                     📎
                     <input type="file" accept="image/*" onChange={(e) => pickCommentImage(t.id, e.target.files?.[0])} hidden />

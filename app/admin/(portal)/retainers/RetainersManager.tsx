@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Fragment, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import TaskBoard from "@/app/components/TaskBoard";
 import type { ProjectTask } from "@/lib/data";
 
@@ -128,31 +128,21 @@ export default function RetainersManager({ retainers, projects, clients, tasksBy
                 {retainers.map((r) => {
                   const tasks = tasksByRetainer[r.id] || [];
                   const used = usageByRetainer[r.id] || 0;
-                  const isOpen = !!openTasks[r.id];
                   return (
-                    <Fragment key={r.id}>
-                      <tr>
-                        <td><div className="pname">{r.client}</div><div style={{ fontSize: ".76rem", color: "var(--grey-2)" }}>{r.project}</div></td>
-                        <td>{r.amount}</td>
-                        <td><span className={`badge ${r.badge}`}>{r.statusLabel}</span></td>
-                        <td>{r.nextDue}</td>
-                        <td>{r.collected}</td>
-                        <td style={{ whiteSpace: "nowrap" }}>
-                          <button type="button" className="btn-o btn am-rowbtn" onClick={() => setOpenTasks((s) => ({ ...s, [r.id]: !s[r.id] }))}>
-                            Tasks {r.taskAllowance > 0 ? `${used}/${r.taskAllowance}` : tasks.length ? `(${tasks.length})` : ""}
-                          </button>
-                          <button type="button" className="btn-o btn am-rowbtn" onClick={() => setEdit(r)}>Edit</button>
-                          <button type="button" className="btn-o btn am-rowbtn" onClick={() => del(r.id)}>Delete</button>
-                        </td>
-                      </tr>
-                      {isOpen && (
-                        <tr>
-                          <td colSpan={6} style={{ background: "var(--paper)" }}>
-                            <TaskBoard scope={{ retainerId: r.id }} role="admin" initial={tasks} allowance={r.taskAllowance} used={used} periodWord={r.period} />
-                          </td>
-                        </tr>
-                      )}
-                    </Fragment>
+                    <tr key={r.id}>
+                      <td><div className="pname">{r.client}</div><div style={{ fontSize: ".76rem", color: "var(--grey-2)" }}>{r.project}</div></td>
+                      <td>{r.amount}</td>
+                      <td><span className={`badge ${r.badge}`}>{r.statusLabel}</span></td>
+                      <td>{r.nextDue}</td>
+                      <td>{r.collected}</td>
+                      <td style={{ whiteSpace: "nowrap" }}>
+                        <button type="button" className="btn-o btn am-rowbtn" onClick={() => setOpenTasks((s) => ({ ...s, [r.id]: !s[r.id] }))}>
+                          Tasks {r.taskAllowance > 0 ? `${used}/${r.taskAllowance}` : tasks.length ? `(${tasks.length})` : ""}
+                        </button>
+                        <button type="button" className="btn-o btn am-rowbtn" onClick={() => setEdit(r)}>Edit</button>
+                        <button type="button" className="btn-o btn am-rowbtn" onClick={() => del(r.id)}>Delete</button>
+                      </td>
+                    </tr>
                   );
                 })}
               </tbody>
@@ -196,6 +186,18 @@ export default function RetainersManager({ retainers, projects, clients, tasksBy
           )}
         </div>
       </div>
+
+      {/* Expanded task boards render full-width here (outside the horizontally-
+          scrollable table) so they reflow cleanly on mobile. */}
+      {retainers.filter((r) => openTasks[r.id]).map((r) => (
+        <div key={r.id} style={{ marginTop: 20 }}>
+          <div style={{ fontSize: ".82rem", color: "var(--grey-2)", margin: "0 0 8px 2px" }}>
+            {r.client} · {r.title}
+            <button type="button" className="btn-o btn am-rowbtn" style={{ marginLeft: 10 }} onClick={() => setOpenTasks((s) => ({ ...s, [r.id]: false }))}>Close</button>
+          </div>
+          <TaskBoard scope={{ retainerId: r.id }} role="admin" initial={tasksByRetainer[r.id] || []} allowance={r.taskAllowance} used={usageByRetainer[r.id] || 0} periodWord={r.period} />
+        </div>
+      ))}
 
       {edit && <EditModal r={edit} onClose={() => setEdit(null)} onSaved={() => { setEdit(null); router.refresh(); }} />}
     </>
