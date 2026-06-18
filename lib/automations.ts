@@ -39,6 +39,10 @@ export async function dispatch(type: EventType, payload: Record<string, unknown>
 async function react(type: EventType, p: Record<string, unknown>): Promise<void> {
   const email = String(p.email || "");
   const name = String(p.name || "there");
+  // Build a CTA URL from a payload-supplied relative path, with a safe fallback —
+  // never point an email button at a path that doesn't exist.
+  const safeUrl = (rel: unknown, fallback: string) =>
+    `${base()}${typeof rel === "string" && rel.startsWith("/") ? rel : fallback}`;
 
   switch (type) {
     case "lead.created":
@@ -149,7 +153,7 @@ async function react(type: EventType, p: Record<string, unknown>): Promise<void>
               `${who} added <strong>${title}</strong> to <strong>${project}</strong>.`,
               "Open the project board to set it in progress, leave a comment, or mark it done when it's complete.",
             ],
-            cta: { label: "Open the project board →", url: `${base()}/dashboard/tasks` },
+            cta: { label: "Open the project board →", url: safeUrl(p.link, "/dashboard") },
           }),
         });
       }
@@ -170,7 +174,7 @@ async function react(type: EventType, p: Record<string, unknown>): Promise<void>
               `We've completed <strong>${title}</strong> on <strong>${project}</strong>.`,
               "Please take a look and confirm it's all good — or leave a comment if anything still needs a tweak.",
             ],
-            cta: { label: "Review & confirm →", url: `${base()}/dashboard/tasks` },
+            cta: { label: "Review & confirm →", url: safeUrl(p.link, "/dashboard") },
           }),
         });
       }
@@ -189,6 +193,7 @@ async function react(type: EventType, p: Record<string, unknown>): Promise<void>
             heading: "A task was confirmed complete",
             intro: `Hi ${name},`,
             paragraphs: [`${who} confirmed <strong>${title}</strong> on <strong>${project}</strong> is complete. Nothing further needed.`],
+            cta: { label: "View the board →", url: safeUrl(p.link, "/admin") },
           }),
         });
       }

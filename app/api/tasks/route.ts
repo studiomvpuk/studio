@@ -7,6 +7,13 @@ import { uploadImage, isUploadError } from "@/lib/attachments";
 
 const ADMIN_EMAIL = () => process.env.ADMIN_EMAIL || "officialstudiomvp@gmail.com";
 
+// Where each recipient should land when they click the email button — these must
+// be real, existing routes (tasks live embedded, not on a standalone page).
+const clientLink = (projectId: string | null, retainerId: string | null) =>
+  retainerId ? "/dashboard/retainer" : "/dashboard";
+const adminLink = (projectId: string | null, retainerId: string | null) =>
+  retainerId ? "/admin/retainers" : projectId ? `/admin/projects/${projectId}` : "/admin";
+
 // The other side's name/email + a human label, for either a project or retainer task.
 async function scopeMeta(projectId: string | null, retainerId: string | null) {
   if (retainerId) {
@@ -84,9 +91,9 @@ export async function POST(req: Request) {
   const meta = await scopeMeta(projectId, retainerId);
   if (meta) {
     if (auth.role === "client") {
-      await dispatch("task.created", { email: ADMIN_EMAIL(), name: "team", project: meta.label, title, who: meta.client_name || "A client" });
+      await dispatch("task.created", { email: ADMIN_EMAIL(), name: "team", project: meta.label, title, who: meta.client_name || "A client", link: adminLink(projectId, retainerId) });
     } else if (meta.client_email) {
-      await dispatch("task.created", { email: meta.client_email, name: meta.client_name || "there", project: meta.label, title, who: "StudioMVP" });
+      await dispatch("task.created", { email: meta.client_email, name: meta.client_name || "there", project: meta.label, title, who: "StudioMVP", link: clientLink(projectId, retainerId) });
     }
   }
   return NextResponse.json({ ok: true, id: rows[0].id });
@@ -120,10 +127,10 @@ export async function PATCH(req: Request) {
   const meta = await scopeMeta(t[0].project_id, t[0].retainer_id);
   if (meta) {
     if (auth.role === "admin" && status === "done" && meta.client_email) {
-      await dispatch("task.done", { email: meta.client_email, name: meta.client_name || "there", project: meta.label, title: t[0].title });
+      await dispatch("task.done", { email: meta.client_email, name: meta.client_name || "there", project: meta.label, title: t[0].title, link: clientLink(t[0].project_id, t[0].retainer_id) });
     }
     if (auth.role === "client" && status === "confirmed") {
-      await dispatch("task.confirmed", { email: ADMIN_EMAIL(), name: "team", project: meta.label, title: t[0].title, who: meta.client_name || "The client" });
+      await dispatch("task.confirmed", { email: ADMIN_EMAIL(), name: "team", project: meta.label, title: t[0].title, who: meta.client_name || "The client", link: adminLink(t[0].project_id, t[0].retainer_id) });
     }
   }
   return NextResponse.json({ ok: true });
