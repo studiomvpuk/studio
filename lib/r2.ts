@@ -2,34 +2,49 @@ import { AwsClient } from "aws4fetch";
 
 /**
  * Cloudflare R2 (S3-compatible) blob store for user uploads (task / comment images).
- * Configure with: R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET.
  * Objects are private — they're served back through our authenticated route.
+ *
+ * Accepts either naming scheme so it works with the existing S3/AWS variables
+ * already set in the environment, or dedicated R2_* names:
+ *   endpoint : S3_ENDPOINT            | https://<R2_ACCOUNT_ID>.r2.cloudflarestorage.com
+ *   bucket   : S3_BUCKET_NAME         | R2_BUCKET
+ *   key id   : AWS_ACCESS_KEY_ID      | R2_ACCESS_KEY_ID
+ *   secret   : AWS_SECRET_ACCESS_KEY  | R2_SECRET_ACCESS_KEY
+ *   region   : AWS_REGION             | (defaults to "auto")
  */
-const accountId = process.env.R2_ACCOUNT_ID || "";
-const accessKeyId = process.env.R2_ACCESS_KEY_ID || "";
-const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY || "";
-const bucket = process.env.R2_BUCKET || "";
+const accessKeyId = process.env.AWS_ACCESS_KEY_ID || process.env.R2_ACCESS_KEY_ID || "";
+const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY || process.env.R2_SECRET_ACCESS_KEY || "";
+const bucket = process.env.S3_BUCKET_NAME || process.env.R2_BUCKET || "";
+const region = process.env.AWS_REGION || "auto";
 
-export const r2Configured = Boolean(accountId && accessKeyId && secretAccessKey && bucket);
+// Account-level endpoint (no bucket), e.g. https://<acct>.r2.cloudflarestorage.com
+const endpoint = (
+  process.env.S3_ENDPOINT ||
+  (process.env.R2_ACCOUNT_ID ? `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com` : "")
+).replace(/\/+$/, "");
 
-// Names of any R2 vars that are missing — for a clear log line, never the values.
+export const r2Configured = Boolean(endpoint && bucket && accessKeyId && secretAccessKey);
+
+// Names of any missing pieces — for a clear log line, never the values.
 export function r2MissingVars(): string[] {
-  return [
-    ["R2_ACCOUNT_ID", accountId],
-    ["R2_ACCESS_KEY_ID", accessKeyId],
-    ["R2_SECRET_ACCESS_KEY", secretAccessKey],
-    ["R2_BUCKET", bucket],
-  ].filter(([, v]) => !v).map(([k]) => k);
+  const out: string[] = [];
+  if (!endpoint) out.push("S3_ENDPOINT (or R2_ACCOUNT_ID)");
+  if (!bucket) out.push("S3_BUCKET_NAME (or R2_BUCKET)");
+  if (!accessKeyId) out.push("AWS_ACCESS_KEY_ID (or R2_ACCESS_KEY_ID)");
+  if (!secretAccessKey) out.push("AWS_SECRET_ACCESS_KEY (or R2_SECRET_ACCESS_KEY)");
+  return out;
 }
 
 let client: AwsClient | null = null;
 function getClient(): AwsClient {
-  if (!client) client = new AwsClient({ accessKeyId, secretAccessKey, region: "auto", service: "s3" });
+  if (!client) client = new AwsClient({ accessKeyId, secretAccessKey, region, service: "s3" });
   return client;
 }
 
+// Path-style object URL. Guards against an endpoint that already includes the bucket.
+const objectBase = endpoint.endsWith(`/${bucket}`) ? endpoint : `${endpoint}/${bucket}`;
 const objectUrl = (key: string) =>
-  `https://${accountId}.r2.cloudflarestorage.com/${bucket}/${encodeURIComponent(key).replace(/%2F/g, "/")}`;
+  `${objectBase}/${encodeURIComponent(key).replace(/%2F/g, "/")}`;
 
 export async function r2Put(key: string, body: Uint8Array | Buffer, mime: string): Promise<void> {
   // Copy into a plain Uint8Array (fetch BodyInit doesn't accept a Node Buffer type).
