@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { r2Configured, r2Put } from "./r2";
+import { r2Configured, r2Put, r2MissingVars } from "./r2";
 
 const MAX_BYTES = 8 * 1024 * 1024; // 8MB
 const EXT: Record<string, string> = {
@@ -16,7 +16,10 @@ export function isUploadError(x: Uploaded | UploadError | null): x is UploadErro
 /** Validate a base64 data-URL image and upload it to R2. Returns null when no image given. */
 export async function uploadImage(dataUrl: unknown): Promise<Uploaded | UploadError | null> {
   if (!dataUrl) return null;
-  if (!r2Configured) return { error: "Image uploads aren't set up yet.", status: 503 };
+  if (!r2Configured) {
+    console.warn("[r2] image upload blocked — missing env vars:", r2MissingVars().join(", "));
+    return { error: "Image uploads aren't set up yet.", status: 503 };
+  }
 
   const m = /^data:([^;]+);base64,(.+)$/s.exec(String(dataUrl));
   if (!m) return { error: "Unsupported image format.", status: 400 };

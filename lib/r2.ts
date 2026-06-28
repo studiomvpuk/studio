@@ -12,6 +12,16 @@ const bucket = process.env.R2_BUCKET || "";
 
 export const r2Configured = Boolean(accountId && accessKeyId && secretAccessKey && bucket);
 
+// Names of any R2 vars that are missing — for a clear log line, never the values.
+export function r2MissingVars(): string[] {
+  return [
+    ["R2_ACCOUNT_ID", accountId],
+    ["R2_ACCESS_KEY_ID", accessKeyId],
+    ["R2_SECRET_ACCESS_KEY", secretAccessKey],
+    ["R2_BUCKET", bucket],
+  ].filter(([, v]) => !v).map(([k]) => k);
+}
+
 let client: AwsClient | null = null;
 function getClient(): AwsClient {
   if (!client) client = new AwsClient({ accessKeyId, secretAccessKey, region: "auto", service: "s3" });
