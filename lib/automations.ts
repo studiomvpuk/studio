@@ -14,6 +14,7 @@ export type EventType =
   | "invoice.paid"
   | "retainer.created"
   | "task.created"
+  | "task.comment"
   | "task.done"
   | "task.confirmed"
   | "project.activated"
@@ -154,6 +155,29 @@ async function react(type: EventType, p: Record<string, unknown>): Promise<void>
               "Open the project board to set it in progress, leave a comment, or mark it done when it's complete.",
             ],
             cta: { label: "Open the project board →", url: safeUrl(p.link, "/dashboard") },
+          }),
+        });
+      }
+      break;
+
+    case "task.comment":
+      if (email) {
+        const project = String(p.project || "your project");
+        const title = String(p.title || "a task");
+        const body = String(p.body || "").slice(0, 400);
+        await sendEmail({
+          to: email,
+          subject: `New comment on: ${title}`,
+          html: renderEmail({
+            preheader: `StudioMVP commented on "${title}".`,
+            heading: "New comment from StudioMVP",
+            intro: `Hi ${name},`,
+            paragraphs: [
+              `We left a comment on <strong>${title}</strong> (${project}):`,
+              body ? `“${body}”` : "An image was attached.",
+              "Open the board to reply or see the full thread.",
+            ],
+            cta: { label: "View the thread →", url: safeUrl(p.link, "/dashboard") },
           }),
         });
       }
